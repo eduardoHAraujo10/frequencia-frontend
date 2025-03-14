@@ -1,43 +1,150 @@
 <template>
   <div class="registro-ponto-container">
-    <div class="registro-card">
-      <h2>Registro de Ponto</h2>
-      
-      <div class="status-section">
-        <div class="time-display">
-          {{ currentTime }}
+    <!-- Modal de Solicitação de Ajuste -->
+    <div v-if="showModal" class="modal-overlay">
+      <div class="modal-content">
+        <h3>Solicitar Ajuste de Registro</h3>
+        
+        <div class="form-group">
+          <label>Registro Atual:</label>
+          <div class="registro-atual">
+            <span>{{ formatDate(registroParaAjuste?.horario) }} - {{ formatTime(registroParaAjuste?.horario) }}</span>
+            <span :class="['registro-tipo', registroParaAjuste?.tipo.toLowerCase()]">
+              {{ registroParaAjuste?.tipo === 'entrada' ? 'Entrada' : 'Saída' }}
+            </span>
+          </div>
         </div>
-        <div class="date-display">
-          {{ currentDate }}
+
+        <div class="form-group">
+          <label>Nova Data/Hora:</label>
+          <input 
+            type="datetime-local" 
+            v-model="novoHorario"
+            class="form-control"
+          >
+        </div>
+
+        <div class="form-group">
+          <label>Justificativa:</label>
+          <textarea 
+            v-model="justificativa"
+            class="form-control"
+            rows="3"
+            placeholder="Explique o motivo do ajuste..."
+          ></textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button 
+            @click="enviarSolicitacaoAjuste" 
+            class="btn-primary"
+            :disabled="!novoHorario || !justificativa || loadingAjuste"
+          >
+            <span v-if="loadingAjuste" class="spinner"></span>
+            {{ loadingAjuste ? 'Enviando...' : 'Enviar Solicitação' }}
+          </button>
+          <button @click="fecharModal" class="btn-secondary">Cancelar</button>
         </div>
       </div>
+    </div>
 
-      <div v-if="statusMessage" :class="['registro-status', statusClass]">
-        {{ statusMessage }}
+    <!-- Modal de Alerta de Esquecimento -->
+    <div v-if="showModalEsquecimento" class="modal-overlay">
+      <div class="modal-content">
+        <h3>Registrar Esquecimento de Ponto</h3>
+        
+        <div class="form-group">
+          <label>Data:</label>
+          <input 
+            type="date" 
+            v-model="alertaData"
+            class="form-control"
+            :max="hoje"
+          >
+        </div>
+
+        <div class="form-group">
+          <label>Horário Previsto:</label>
+          <input 
+            type="time" 
+            v-model="alertaHorario"
+            class="form-control"
+          >
+        </div>
+
+        <div class="form-group">
+          <label>Tipo:</label>
+          <select v-model="alertaTipo" class="form-control">
+            <option value="entrada">Entrada</option>
+            <option value="saida">Saída</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Justificativa:</label>
+          <textarea 
+            v-model="alertaJustificativa"
+            class="form-control"
+            rows="3"
+            placeholder="Explique o motivo do esquecimento..."
+          ></textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button 
+            @click="enviarAlertaEsquecimento" 
+            class="btn-primary"
+            :disabled="!alertaData || !alertaHorario || !alertaTipo || !alertaJustificativa || loadingAlerta"
+          >
+            <span v-if="loadingAlerta" class="spinner"></span>
+            {{ loadingAlerta ? 'Enviando...' : 'Enviar Alerta' }}
+          </button>
+          <button @click="fecharModalEsquecimento" class="btn-secondary">Cancelar</button>
+        </div>
       </div>
+    </div>
 
-      <div class="button-group">
-        <button 
-          @click="registrarPonto('entrada')" 
-          class="registro-button entrada"
-          :disabled="loading || !podeRegistrarEntrada"
-        >
-          <span v-if="loading && tipoRegistro === 'entrada'" class="spinner"></span>
-          {{ loading && tipoRegistro === 'entrada' ? 'Registrando...' : 'Registrar Entrada' }}
-        </button>
+    <div class="registro-grid">
+      <div class="registro-card">
+        <h2>Registro de Presença</h2>
+        
+        <div class="status-section">
+          <div class="time-display">
+            {{ currentTime }}
+          </div>
+          <div class="date-display">
+            {{ currentDate }}
+          </div>
+        </div>
 
-        <button 
-          @click="registrarPonto('saida')" 
-          class="registro-button saida"
-          :disabled="loading || !podeRegistrarSaida"
-        >
-          <span v-if="loading && tipoRegistro === 'saida'" class="spinner"></span>
-          {{ loading && tipoRegistro === 'saida' ? 'Registrando...' : 'Registrar Saída' }}
-        </button>
-      </div>
+        <div v-if="mensagemRegistro" class="registro-status info">
+          {{ mensagemRegistro }}
+        </div>
 
-      <div class="registros-hoje">
-        <h3>Registros de Hoje</h3>
+        <div v-if="statusMessage" :class="['registro-status', statusClass]">
+          {{ statusMessage }}
+        </div>
+
+        <div class="button-group">
+          <button 
+            @click="registrarPresenca()" 
+            class="registro-button"
+            :class="botaoClasse"
+            :disabled="loading"
+          >
+            <span v-if="loading" class="spinner"></span>
+            {{ botaoTexto }}
+          </button>
+          <button 
+            @click="abrirModalEsquecimento" 
+            class="registro-button esquecimento"
+            title="Registrar esquecimento de ponto"
+          >
+            <i class="fas fa-exclamation-triangle"></i>
+            Esqueci de Registrar
+          </button>
+        </div>
+
         <div class="resumo-section">
           <div class="resumo-card">
             <i class="fas fa-clock"></i>
@@ -54,43 +161,117 @@
             </div>
           </div>
         </div>
+      </div>
 
+      <div class="registros-hoje-card">
+        <h3>Registros de Hoje</h3>
+        
         <div v-if="registrosHoje.length > 0" class="registros-list">
           <div v-for="(registro, index) in registrosHoje" :key="index" class="registro-item">
-            <span class="registro-hora">{{ formatTime(registro.horario) }}</span>
-            <span :class="['registro-tipo', registro.tipo.toLowerCase()]">
-              {{ registro.tipo === 'entrada' ? 'Entrada' : 'Saída' }}
-            </span>
+            <div class="registro-info">
+              <span class="registro-hora">{{ formatTime(registro.horario) }}</span>
+              <span :class="['registro-tipo', registro.tipo.toLowerCase()]">
+                {{ registro.tipo === 'entrada' ? 'Entrada' : 'Saída' }}
+              </span>
+            </div>
+            <button 
+              @click="abrirModalAjuste(registro)" 
+              class="btn-ajuste"
+              title="Solicitar ajuste deste registro"
+            >
+              <i class="fas fa-edit"></i>
+            </button>
           </div>
         </div>
         <p v-else class="no-registros">Nenhum registro hoje</p>
 
-        <div class="historico-section">
-          <h3>Resumo do Período</h3>
-          <div class="periodo-info">
-            <span class="periodo-label">{{ formatDate(resumoMes.periodo?.inicio) }} até {{ formatDate(resumoMes.periodo?.fim) }}</span>
+        <!-- Alertas de Esquecimento -->
+        <div class="alertas-section">
+          <div class="card">
+            <div class="card-header">
+              <h3>Último Alerta de Esquecimento</h3>
+              <router-link to="/historico-alertas" class="btn-historico">
+                <i class="fas fa-history"></i>
+                Ver Todos
+              </router-link>
+            </div>
+            
+            <div v-if="loadingAlertas" class="loading-spinner">
+              <span class="spinner dark"></span>
+              Carregando alertas...
+            </div>
+
+            <div v-else-if="!alertaMaisRecente" class="no-data">
+              Nenhum alerta de esquecimento registrado.
+            </div>
+
+            <div v-else class="alertas-list">
+              <div class="alerta-card">
+                <div class="alerta-header">
+                  <div class="alerta-data">
+                    <i class="fas fa-calendar"></i>
+                    {{ formatarData(alertaMaisRecente.data) }}
+                  </div>
+                  <div class="alerta-horario">
+                    <i class="fas fa-clock"></i>
+                    {{ formatTime(alertaMaisRecente.horario_previsto) }}
+                  </div>
+                  <div class="alerta-tipo">
+                    <i class="fas fa-sign-in-alt" v-if="alertaMaisRecente.tipo === 'entrada'"></i>
+                    <i class="fas fa-sign-out-alt" v-else></i>
+                    {{ alertaMaisRecente.tipo === 'entrada' ? 'Entrada' : 'Saída' }}
+                  </div>
+                  <div class="alerta-status" :class="alertaMaisRecente.status">
+                    {{ traduzirStatus(alertaMaisRecente.status) }}
+                  </div>
+                </div>
+
+                <div class="alerta-body">
+                  <strong>Justificativa:</strong>
+                  <p>{{ alertaMaisRecente.justificativa }}</p>
+                </div>
+
+                <div v-if="alertaMaisRecente.observacao_coordenador" class="alerta-feedback">
+                  <strong>Feedback do Coordenador:</strong>
+                  <p>{{ alertaMaisRecente.observacao_coordenador }}</p>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="resumo-info-mes">
-            <div class="info-item">
-              <span class="info-label">Horas na Semana:</span>
-              <span class="info-valor">{{ horasTrabalhadas.semana }}h</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Dias Presentes:</span>
-              <span class="info-valor">{{ resumoMes.diasTrabalhados }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Taxa de Frequência:</span>
-              <span class="info-valor">{{ resumoMes.frequencia }}%</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Primeiro Registro:</span>
-              <span class="info-valor">{{ formatDate(resumoMes.primeiroRegistro) }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Último Registro:</span>
-              <span class="info-valor">{{ formatDate(resumoMes.ultimoRegistro) }}</span>
-            </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="resumo-periodo-section">
+      <button class="resumo-toggle" @click="toggleResumo">
+        <span>Resumo do Período</span>
+        <i :class="['fas', isResumoExpanded ? 'fa-chevron-up' : 'fa-chevron-down']"></i>
+      </button>
+      
+      <div v-show="isResumoExpanded" class="resumo-content">
+        <div class="periodo-info">
+          <span class="periodo-label">{{ formatDate(resumoMes.periodo?.inicio) }} até {{ formatDate(resumoMes.periodo?.fim) }}</span>
+        </div>
+        <div class="resumo-info-mes">
+          <div class="info-item">
+            <span class="info-label">Horas na Semana:</span>
+            <span class="info-valor">{{ horasTrabalhadas.semana }}h</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Dias Presentes:</span>
+            <span class="info-valor">{{ resumoMes.diasTrabalhados }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Taxa de Frequência:</span>
+            <span class="info-valor">{{ resumoMes.frequencia }}%</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Primeiro Registro:</span>
+            <span class="info-valor">{{ formatDate(resumoMes.primeiroRegistro) }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Último Registro:</span>
+            <span class="info-valor">{{ formatDate(resumoMes.ultimoRegistro) }}</span>
           </div>
         </div>
       </div>
@@ -112,20 +293,48 @@ export default {
       statusClass: '',
       registrosHoje: [],
       clockInterval: null,
-      tipoRegistro: null,
       horasTrabalhadas: { hoje: '0h', semana: '0h' },
       resumoDia: {},
       resumoMes: {},
+      showModal: false,
+      registroParaAjuste: null,
+      novoHorario: '',
+      justificativa: '',
+      loadingAjuste: false,
+      showModalEsquecimento: false,
+      alertaData: '',
+      alertaHorario: '',
+      alertaTipo: 'entrada',
+      alertaJustificativa: '',
+      loadingAlerta: false,
+      alertas: [],
+      loadingAlertas: false,
+      isResumoExpanded: false,
+      alertaMaisRecente: null
     };
   },
   computed: {
-    podeRegistrarEntrada() {
-      if (this.registrosHoje.length === 0) return true;
-      return this.registrosHoje[this.registrosHoje.length - 1].tipo === 'saida';
+    ultimoRegistro() {
+      if (this.registrosHoje.length === 0) return null;
+      return this.registrosHoje[this.registrosHoje.length - 1];
     },
-    podeRegistrarSaida() {
-      if (this.registrosHoje.length === 0) return false;
-      return this.registrosHoje[this.registrosHoje.length - 1].tipo === 'entrada';
+    proximoTipoRegistro() {
+      if (!this.ultimoRegistro) return 'entrada';
+      return this.ultimoRegistro.tipo === 'entrada' ? 'saida' : 'entrada';
+    },
+    mensagemRegistro() {
+      if (!this.ultimoRegistro) return 'Nenhum registro hoje';
+      return `Último registro: ${this.ultimoRegistro.tipo === 'entrada' ? 'Entrada' : 'Saída'} às ${this.formatTime(this.ultimoRegistro.horario)}`;
+    },
+    botaoTexto() {
+      if (this.loading) return 'Registrando...';
+      return `Registrar ${this.proximoTipoRegistro === 'entrada' ? 'Entrada' : 'Saída'}`;
+    },
+    botaoClasse() {
+      return this.proximoTipoRegistro === 'entrada' ? 'entrada' : 'saida';
+    },
+    hoje() {
+      return new Date().toISOString().split('T')[0];
     }
   },
   created() {
@@ -149,15 +358,18 @@ export default {
         day: 'numeric'
       });
     },
-    async registrarPonto(tipo) {
+    async registrarPresenca() {
       this.loading = true;
-      this.tipoRegistro = tipo;
       this.statusMessage = '';
       this.statusClass = '';
 
       try {
+        const tipoRegistro = this.ultimoRegistro ? 
+          (this.ultimoRegistro.tipo === 'entrada' ? 'saida' : 'entrada') : 
+          'entrada';
+
         const response = await axios.post('http://localhost:8000/api/v1/registros', {
-          tipo: tipo
+          tipo: tipoRegistro
         }, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -165,7 +377,7 @@ export default {
         });
 
         if (response.data.status === 'success') {
-          this.statusMessage = `Ponto de ${tipo === 'entrada' ? 'entrada' : 'saída'} registrado com sucesso!`;
+          this.statusMessage = `${tipoRegistro === 'entrada' ? 'Entrada' : 'Saída'} registrada com sucesso!`;
           this.statusClass = 'success';
           await this.carregarDados();
         } else {
@@ -177,7 +389,6 @@ export default {
         this.statusClass = 'error';
       } finally {
         this.loading = false;
-        this.tipoRegistro = null;
         
         // Limpar a mensagem após 3 segundos
         if (this.statusClass === 'success') {
@@ -260,14 +471,199 @@ export default {
       }
     },
     formatTime(timeString) {
-      return new Date(timeString).toLocaleTimeString('pt-BR', {
-        hour: '2-digit',
-        minute: '2-digit'
-      });
+      if (!timeString) return '';
+      // Se a hora já estiver no formato HH:MM, retorna ela mesma
+      if (typeof timeString === 'string' && timeString.match(/^\d{2}:\d{2}$/)) {
+        return timeString;
+      }
+      // Se for um objeto Date ou string ISO, converte para HH:MM
+      const date = new Date(timeString);
+      if (isNaN(date.getTime())) {
+        // Se não for uma data válida, tenta extrair as horas e minutos da string
+        const [hours, minutes] = timeString.split(':');
+        return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+      }
+      const horas = String(date.getHours()).padStart(2, '0');
+      const minutos = String(date.getMinutes()).padStart(2, '0');
+      return `${horas}:${minutos}`;
     },
     formatDate(dateString) {
       return new Date(dateString).toLocaleDateString('pt-BR');
+    },
+    abrirModalAjuste(registro) {
+      this.registroParaAjuste = registro;
+      // Formata a data/hora atual do registro para o formato do input datetime-local
+      const dataHora = new Date(registro.horario);
+      this.novoHorario = dataHora.toISOString().slice(0, 16);
+      this.showModal = true;
+    },
+    fecharModal() {
+      this.showModal = false;
+      this.registroParaAjuste = null;
+      this.novoHorario = '';
+      this.justificativa = '';
+    },
+    async enviarSolicitacaoAjuste() {
+      if (!this.novoHorario || !this.justificativa) return;
+      
+      this.loadingAjuste = true;
+      try {
+        const response = await axios.post('http://localhost:8000/api/v1/registros/solicitar-ajuste', {
+          registro_id: this.registroParaAjuste.id,
+          novo_horario: this.novoHorario,
+          justificativa: this.justificativa
+        }, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        if (response.data.status === 'success') {
+          this.statusMessage = 'Solicitação enviada com sucesso!';
+          this.statusClass = 'success';
+          this.fecharModal();
+          await this.carregarRegistrosHoje();
+        } else {
+          this.statusMessage = response.data.message || 'Erro ao enviar solicitação';
+          this.statusClass = 'error';
+        }
+      } catch (error) {
+        this.statusMessage = error.response?.data?.message || 'Erro ao enviar solicitação';
+        this.statusClass = 'error';
+      } finally {
+        this.loadingAjuste = false;
+      }
+    },
+    abrirModalEsquecimento() {
+      this.alertaData = new Date().toISOString().split('T')[0];
+      this.alertaHorario = '';
+      this.alertaTipo = 'entrada';
+      this.alertaJustificativa = '';
+      this.showModalEsquecimento = true;
+    },
+    fecharModalEsquecimento() {
+      this.showModalEsquecimento = false;
+      this.alertaData = '';
+      this.alertaHorario = '';
+      this.alertaTipo = 'entrada';
+      this.alertaJustificativa = '';
+    },
+    async enviarAlertaEsquecimento() {
+      if (!this.alertaData || !this.alertaHorario || !this.alertaTipo || !this.alertaJustificativa) return;
+
+      this.loadingAlerta = true;
+      try {
+        const response = await axios.post('http://localhost:8000/api/v1/registros/alerta-esquecimento', {
+          data: this.alertaData,
+          horario_previsto: this.alertaHorario,
+          tipo: this.alertaTipo,
+          justificativa: this.alertaJustificativa
+        }, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        if (response.data.status === 'success') {
+          this.statusMessage = 'Alerta enviado com sucesso!';
+          this.statusClass = 'success';
+          this.fecharModalEsquecimento();
+          await this.carregarAlertas();
+        } else {
+          this.statusMessage = response.data.message || 'Erro ao enviar alerta';
+          this.statusClass = 'error';
+        }
+      } catch (error) {
+        this.statusMessage = error.response?.data?.message || 'Erro ao enviar alerta';
+        this.statusClass = 'error';
+      } finally {
+        this.loadingAlerta = false;
+      }
+    },
+    async carregarAlertas() {
+      console.log('Iniciando carregamento de alertas...');
+      this.loadingAlertas = true;
+      try {
+        const response = await axios.get('http://localhost:8000/api/v1/registros/alerta-esquecimento', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        console.log('Resposta da API:', response.data);
+
+        if (response.data.success) {
+          this.alertas = response.data.data || [];
+          console.log('Alertas antes da ordenação:', this.alertas);
+          
+          // Ordena os alertas por data e pega o mais recente
+          this.alertas.sort((a, b) => new Date(b.data) - new Date(a.data));
+          console.log('Alertas após ordenação:', this.alertas);
+          
+          this.alertaMaisRecente = this.alertas[0] || null;
+          console.log('Alerta mais recente antes da formatação:', this.alertaMaisRecente);
+          
+          // Se tiver um alerta mais recente, formata o horário
+          if (this.alertaMaisRecente) {
+            const horarioFormatado = this.formatarHora(this.alertaMaisRecente.horario_previsto);
+            console.log('Horário formatado:', horarioFormatado);
+            
+            this.alertaMaisRecente = {
+              ...this.alertaMaisRecente,
+              horario_previsto: horarioFormatado
+            };
+          }
+          
+          console.log('Alerta mais recente após formatação:', this.alertaMaisRecente);
+        } else {
+          console.log('Resposta da API não foi bem-sucedida:', response.data);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar alertas:', error);
+        if (error.response) {
+          console.error('Detalhes do erro:', error.response.data);
+        }
+      } finally {
+        this.loadingAlertas = false;
+      }
+    },
+    formatarHora(hora) {
+      if (!hora) return '';
+      // Se a hora já estiver no formato HH:MM, retorna ela mesma
+      if (typeof hora === 'string' && hora.match(/^\d{2}:\d{2}$/)) {
+        return hora;
+      }
+      // Se for um objeto Date ou string ISO, converte para HH:MM
+      const date = new Date(hora);
+      if (isNaN(date.getTime())) {
+        // Se não for uma data válida, tenta extrair as horas e minutos da string
+        const [hours, minutes] = hora.split(':');
+        return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+      }
+      const horas = String(date.getHours()).padStart(2, '0');
+      const minutos = String(date.getMinutes()).padStart(2, '0');
+      return `${horas}:${minutos}`;
+    },
+    formatarData(data) {
+      return new Date(data).toLocaleDateString('pt-BR');
+    },
+    traduzirStatus(status) {
+      const traducoes = {
+        'pendente': 'Pendente',
+        'aprovado': 'Aprovado',
+        'rejeitado': 'Rejeitado'
+      };
+      return traducoes[status] || status;
+    },
+    toggleResumo() {
+      this.isResumoExpanded = !this.isResumoExpanded;
     }
+  },
+  async mounted() {
+    await this.carregarDados();
+    await this.carregarAlertas();
+    this.updateDateTime();
+    this.clockInterval = setInterval(this.updateDateTime, 1000);
   }
 };
 </script>
@@ -275,26 +671,65 @@ export default {
 <style scoped>
 .registro-ponto-container {
   min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   padding: 2rem;
   background-color: #f5f5f5;
 }
 
-.registro-card {
+.registro-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.registro-card,
+.registros-hoje-card {
   background: white;
   padding: 2rem;
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  min-height: 450px;
 }
 
-h2 {
+.registro-card h2,
+.registros-hoje-card h3 {
+  margin: 0 0 2rem 0;
   color: #333;
-  margin-bottom: 2rem;
+  font-size: 1.5rem;
   text-align: center;
+}
+
+.registros-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+}
+
+.alertas-section {
+  margin-top: auto;
+  padding-top: 2rem;
+  border-top: 1px solid #eee;
+}
+
+.alertas-section h3 {
+  margin-bottom: 1.5rem;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.no-registros {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  padding: 2rem;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  margin: 1rem 0;
 }
 
 .status-section {
@@ -335,6 +770,12 @@ h2 {
   background-color: #f8d7da;
   color: #721c24;
   border: 1px solid #f5c6cb;
+}
+
+.registro-status.info {
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
 }
 
 .button-group {
@@ -394,18 +835,6 @@ h2 {
   100% { transform: rotate(360deg); }
 }
 
-.registros-hoje {
-  margin-top: 2rem;
-  padding-top: 2rem;
-  border-top: 1px solid #eee;
-}
-
-h3 {
-  color: #444;
-  margin-bottom: 1rem;
-  text-align: center;
-}
-
 .resumo-section {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -443,18 +872,19 @@ h3 {
   color: #666;
 }
 
-.registros-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
 .registro-item {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   padding: 0.75rem;
   background-color: #f8f9fa;
   border-radius: 4px;
+}
+
+.registro-info {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
 }
 
 .registro-hora {
@@ -476,18 +906,6 @@ h3 {
 .registro-tipo.saida {
   background-color: #f8d7da;
   color: #721c24;
-}
-
-.no-registros {
-  text-align: center;
-  color: #666;
-  font-style: italic;
-}
-
-.historico-section {
-  margin-top: 2rem;
-  padding-top: 1rem;
-  border-top: 1px solid #eee;
 }
 
 .resumo-info-mes {
@@ -530,21 +948,342 @@ h3 {
   border-radius: 20px;
 }
 
-@media (max-width: 480px) {
-  .registro-card {
-    padding: 1.5rem;
-  }
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
 
-  .time-display {
-    font-size: 2.5rem;
-  }
+.modal-content {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
 
-  .date-display {
-    font-size: 1rem;
-  }
+.modal-content h3 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: #333;
+}
 
-  .resumo-section {
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #555;
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #4CAF50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+textarea.form-control {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.btn-primary {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  min-width: 100px;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #45a049;
+}
+
+.btn-primary:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background-color: #f5f5f5;
+  color: #333;
+  border: 1px solid #ddd;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  min-width: 100px;
+}
+
+.btn-secondary:hover {
+  background-color: #e9e9e9;
+}
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s ease-in-out infinite;
+  margin-right: 0.5rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.registro-atual {
+  background-color: #f8f9fa;
+  padding: 0.75rem;
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.registro-button.esquecimento {
+  background-color: #ffc107;
+  color: #000;
+  margin-left: 1rem;
+}
+
+.registro-button.esquecimento:hover:not(:disabled) {
+  background-color: #e0a800;
+}
+
+.registro-button.esquecimento i {
+  margin-right: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .registro-grid {
     grid-template-columns: 1fr;
   }
+
+  .registro-card,
+  .registros-hoje-card {
+    width: 100%;
+  }
+}
+
+.btn-ajuste {
+  background: none;
+  border: none;
+  color: #6c757d;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.btn-ajuste:hover {
+  color: #007bff;
+  background-color: rgba(0, 123, 255, 0.1);
+}
+
+.loading-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  color: #666;
+}
+
+.spinner.dark {
+  border-color: rgba(0, 0, 0, 0.2);
+  border-top-color: #333;
+}
+
+.no-data {
+  text-align: center;
+  padding: 1.5rem;
+  color: #666;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+.alertas-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.alerta-card {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 1rem;
+  background-color: #f8f9fa;
+}
+
+.alerta-header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.alerta-header > div {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.alerta-header i {
+  color: #666;
+}
+
+.alerta-status {
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.alerta-status.pendente {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.alerta-status.aprovado {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.alerta-status.rejeitado {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.alerta-body {
+  margin-bottom: 1rem;
+}
+
+.alerta-body p,
+.alerta-feedback p {
+  margin: 0.5rem 0;
+  color: #555;
+}
+
+.alerta-feedback {
+  padding-top: 1rem;
+  border-top: 1px solid #ddd;
+}
+
+.resumo-periodo-section {
+  max-width: 1200px;
+  margin: 2rem auto 0;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.resumo-toggle {
+  width: 100%;
+  padding: 1rem 2rem;
+  background: none;
+  border: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  transition: background-color 0.3s ease;
+}
+
+.resumo-toggle:hover {
+  background-color: #f8f9fa;
+}
+
+.resumo-toggle i {
+  transition: transform 0.3s ease;
+}
+
+.resumo-content {
+  padding: 1.5rem 2rem;
+  border-top: 1px solid #eee;
+}
+
+.alertas-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.btn-ver-todos {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: #007bff;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.btn-ver-todos:hover {
+  background-color: rgba(0, 123, 255, 0.1);
+}
+
+.btn-ver-todos i {
+  font-size: 0.875rem;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.btn-historico {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: #666;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.btn-historico:hover {
+  background-color: #f0f0f0;
 }
 </style> 

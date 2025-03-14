@@ -7,6 +7,7 @@ export const isLoading = ref(false);
 import Login from './views/auth/Login.vue';
 import RegistroPonto from './views/aluno/RegistroPonto.vue';
 import HistoricoPresenca from './views/aluno/HistoricoPresenca.vue';
+import HistoricoAlertas from './views/aluno/HistoricoAlertas.vue';
 import GerenciarAlunos from './views/coordenador/GerenciarAlunos.vue';
 import ControleFrequencia from './views/coordenador/ControleFrequencia.vue';
 import Relatorios from './views/coordenador/Relatorios.vue';
@@ -51,6 +52,16 @@ const routes = [
     component: HistoricoPresenca,
     meta: {
       title: 'Histórico de Presença',
+      requiresAuth: true,
+      role: 'aluno'
+    }
+  },
+  {
+    path: '/historico-alertas',
+    name: 'HistoricoAlertas',
+    component: HistoricoAlertas,
+    meta: {
+      title: 'Histórico de Alertas',
       requiresAuth: true,
       role: 'aluno'
     }

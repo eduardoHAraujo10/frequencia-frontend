@@ -100,6 +100,11 @@ const menuItems = computed(() => {
         label: 'Histórico de Presença',
         icon: 'mdi-history',
         command: () => router.push('/historico-presenca')
+      },
+      {
+        label: 'Histórico de Alertas',
+        icon: 'mdi-bell-outline',
+        command: () => router.push('/historico-alertas')
       }
     );
   }

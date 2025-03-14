@@ -367,8 +367,8 @@ select, input[type="date"] {
 
 .resumo-card {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
   margin-bottom: 2rem;
   background: white;
   padding: 1.5rem;
@@ -412,9 +412,10 @@ select, input[type="date"] {
 }
 
 .registros-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin-top: 2rem;
 }
 
 .dia-registro {
@@ -422,16 +423,21 @@ select, input[type="date"] {
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  margin-bottom: 1rem;
+  transition: transform 0.2s ease;
+}
+
+.dia-registro:hover {
+  transform: translateY(-2px);
 }
 
 .data-header {
-  background-color: #f8f9fa;
+  background-color: #007bff;
   padding: 1rem;
   font-weight: 600;
-  color: #444;
+  color: white;
   text-transform: capitalize;
-  border-bottom: 1px solid #eee;
+  text-align: center;
+  font-size: 1.1rem;
 }
 
 .registros-dia {
@@ -442,50 +448,39 @@ select, input[type="date"] {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
-  background: white;
+  padding: 0.75rem;
+  background: #f8f9fa;
   border-radius: 6px;
   margin-bottom: 0.5rem;
   border: 1px solid #eee;
-  transition: transform 0.2s ease;
+  transition: background-color 0.2s ease;
+}
+
+.registro-item:hover {
+  background-color: #e9ecef;
 }
 
 .registro-item:last-child {
   margin-bottom: 0;
 }
 
-.registro-item:hover {
-  transform: translateX(4px);
-  border-color: #007bff;
-}
-
-.tempo-info {
+.registro-info {
   display: flex;
   align-items: center;
+  gap: 1rem;
 }
 
 .hora {
-  font-size: 1.1rem;
   font-weight: 600;
   color: #007bff;
-}
-
-.registro-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.aluno-nome {
-  font-size: 0.875rem;
-  color: #666;
+  font-size: 1.1rem;
 }
 
 .tipo {
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
   font-weight: 500;
-  text-transform: capitalize;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
 }
 
 .tipo.entrada {
@@ -525,11 +520,21 @@ select, input[type="date"] {
   text-align: center;
   padding: 3rem;
   color: #666;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-top: 2rem;
 }
 
 .no-data i {
   font-size: 3rem;
+  color: #dc3545;
   margin-bottom: 1rem;
+}
+
+.no-data p {
+  font-size: 1.1rem;
+  margin: 0;
 }
 
 @keyframes spin {
@@ -553,6 +558,18 @@ select, input[type="date"] {
 
   select, input[type="date"] {
     min-width: 100%;
+  }
+
+  .resumo-card {
+    grid-template-columns: 1fr;
+  }
+
+  .registros-list {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-button {
+    width: 100%;
   }
 }
 
@@ -636,6 +653,51 @@ select, input[type="date"] {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
+  }
+}
+
+.no-registros {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+  font-style: italic;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+.date-range {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-top: 0;
+}
+
+.date-input {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.date-input label {
+  margin-bottom: 0;
+  white-space: nowrap;
+}
+
+.date-input input[type="date"] {
+  width: auto;
+  min-width: 150px;
+  padding: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .date-range {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .date-input {
+    flex: 1;
+    min-width: 200px;
   }
 }
 </style> 
