@@ -2,45 +2,35 @@
   <div class="sidebar" :class="{ 'sidebar-collapsed': isCollapsed }">
     <div class="sidebar-header">
       <h3 v-if="!isCollapsed">Sistema de Ponto</h3>
-      <Button 
-        icon="pi pi-bars" 
-        @click="toggleSidebar" 
-        class="p-button-text p-button-rounded"
-        :aria-label="isCollapsed ? 'Expandir menu' : 'Recolher menu'"
-      />
+      <va-button @click="toggleSidebar" flat>
+        <va-icon name="mdi-menu" />
+      </va-button>
     </div>
 
     <div class="user-info" v-if="!isCollapsed">
-      <Avatar :label="userInitials" class="mb-2" size="large" shape="circle" />
+      <va-avatar :src="userAvatar" />
       <div class="user-details">
         <p class="user-name">{{ userName }}</p>
-        <Tag :value="userRole === 'coordenador' ? 'Coordenador' : 'Aluno'" 
-             :severity="userRole === 'coordenador' ? 'success' : 'info'" />
+        <va-badge>
+          {{ userRole === 'coordenador' ? 'Coordenador' : 'Aluno' }}
+        </va-badge>
       </div>
     </div>
 
     <div class="menu-container">
       <div v-for="(item, index) in menuItems" :key="index" class="menu-item">
-        <Button
-          :icon="item.icon"
-          :label="isCollapsed ? undefined : item.label"
-          class="p-button-text w-full justify-content-start"
-          @click="item.command"
-          :tooltip="isCollapsed ? item.label : undefined"
-          tooltipOptions="{ position: 'right' }"
-        />
+        <va-button block flat @click="item.command">
+          <va-icon :name="item.icon" />
+          <span v-if="!isCollapsed" class="menu-label">{{ item.label }}</span>
+        </va-button>
       </div>
     </div>
 
     <div class="sidebar-footer">
-      <Button 
-        @click="handleLogout" 
-        icon="pi pi-sign-out" 
-        :label="isCollapsed ? undefined : 'Sair'"
-        class="p-button-danger p-button-text w-full"
-        :tooltip="isCollapsed ? 'Sair' : undefined"
-        tooltipOptions="{ position: 'right' }"
-      />
+      <va-button @click="handleLogout" block flat>
+        <va-icon name="mdi-logout" />
+        <span v-if="!isCollapsed">Sair</span>
+      </va-button>
     </div>
   </div>
 </template>
@@ -48,9 +38,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import Button from 'primevue/button';
-import Avatar from 'primevue/avatar';
-import Tag from 'primevue/tag';
+import { VaButton, VaAvatar, VaBadge, VaIcon } from 'vuestic-ui'
 
 const router = useRouter();
 const isCollapsed = ref(false);
@@ -66,6 +54,10 @@ const userInitials = computed(() => {
     .slice(0, 2);
 });
 
+const userAvatar = computed(() => {
+  return `https://ui-avatars.com/api/?name=${userInitials.value}`;
+});
+
 const menuItems = computed(() => {
   const items = [];
 
@@ -73,27 +65,27 @@ const menuItems = computed(() => {
     items.push(
       {
         label: 'Dashboard',
-        icon: 'pi pi-chart-line',
+        icon: 'mdi-view-dashboard',
         command: () => router.push('/dashboard-coordenador')
       },
       {
         label: 'Gerenciar Alunos',
-        icon: 'pi pi-users',
+        icon: 'mdi-account-group',
         command: () => router.push('/alunos')
       },
       {
         label: 'Controle de Frequência',
-        icon: 'pi pi-calendar',
+        icon: 'mdi-calendar',
         command: () => router.push('/frequencias')
       },
       {
         label: 'Gerenciamento de Pontos',
-        icon: 'pi pi-clock',
+        icon: 'mdi-clock-outline',
         command: () => router.push('/gerenciamento-pontos')
       },
       {
         label: 'Relatórios',
-        icon: 'pi pi-file',
+        icon: 'mdi-file-document-outline',
         command: () => router.push('/relatorios')
       }
     );
@@ -101,12 +93,12 @@ const menuItems = computed(() => {
     items.push(
       {
         label: 'Registro de Ponto',
-        icon: 'pi pi-clock',
+        icon: 'mdi-clock-check-outline',
         command: () => router.push('/registro-ponto')
       },
       {
         label: 'Histórico de Presença',
-        icon: 'pi pi-calendar-check',
+        icon: 'mdi-history',
         command: () => router.push('/historico-presenca')
       }
     );
@@ -114,7 +106,7 @@ const menuItems = computed(() => {
 
   items.push({
     label: 'Meu Perfil',
-    icon: 'pi pi-user',
+    icon: 'mdi-account',
     command: () => router.push('/perfil')
   });
 
@@ -257,5 +249,23 @@ const handleLogout = async () => {
   .sidebar.show {
     transform: translateX(0);
   }
+}
+
+.menu-item i {
+  margin-right: 8px;
+  font-size: 1.2rem;
+}
+
+.menu-label {
+  margin-left: 8px;
+}
+
+.sidebar-collapsed .menu-item i {
+  margin-right: 0;
+}
+
+.mdi {
+  line-height: 1;
+  vertical-align: middle;
 }
 </style> 

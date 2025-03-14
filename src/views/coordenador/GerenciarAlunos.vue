@@ -2,82 +2,45 @@
   <div class="gerenciar-alunos-container">
     <div class="header-actions">
       <h2>Gerenciar Alunos</h2>
-      <button @click="showModal = true" class="add-button">
+      <va-button @click="showModal = true">
         <i class="fas fa-plus"></i>
         Cadastrar Novo Aluno
-      </button>
+      </va-button>
     </div>
 
-    <!-- Modal de Cadastro -->
-    <div v-if="showModal" class="modal-overlay">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>Cadastrar Novo Aluno</h3>
-          <button @click="showModal = false" class="close-button">
-            <i class="fas fa-times"></i>
-          </button>
+    <va-modal v-model="showModal" :title="'Cadastrar Novo Aluno'" hide-default-actions>
+      <form @submit.prevent="handleSubmit" class="register-form">
+        <div class="form-group">
+          <va-input
+            v-model="formData.username"
+            label="Nome de usuário"
+            :error="errors.username"
+          />
         </div>
 
-        <form @submit.prevent="handleSubmit" class="register-form">
-          <div class="form-group">
-            <span class="p-float-label">
-              <InputText
-                id="nome"
-                v-model="formData.nome"
-                :class="{ 'p-invalid': errors.nome }"
-                @blur="validateField('nome')"
-                autocomplete="off"
-              />
-              <label for="nome">Nome Completo*</label>
-            </span>
-            <small class="p-error" v-if="errors.nome">{{ errors.nome }}</small>
-          </div>
+        <div class="form-group">
+          <va-input
+            v-model="formData.password"
+            type="password"
+            label="Senha"
+            :error="errors.password"
+          />
+        </div>
 
-          <div class="form-group">
-            <span class="p-float-label">
-              <InputText
-                id="email"
-                v-model="formData.email"
-                :class="{ 'p-invalid': errors.email }"
-                type="email"
-                @blur="validateField('email')"
-                autocomplete="off"
-              />
-              <label for="email">E-mail*</label>
-            </span>
-            <small class="p-error" v-if="errors.email">{{ errors.email }}</small>
-          </div>
+        <div class="form-actions">
+          <va-button flat @click="showModal = false">
+            Cancelar
+          </va-button>
+          <va-button @click="handleSubmit">
+            Cadastrar
+          </va-button>
+        </div>
 
-          <div class="form-group">
-            <span class="p-float-label">
-              <InputText
-                id="matricula"
-                v-model="formData.matricula"
-                :class="{ 'p-invalid': errors.matricula }"
-                @blur="validateField('matricula')"
-                autocomplete="off"
-              />
-              <label for="matricula">Matrícula*</label>
-            </span>
-            <small class="p-error" v-if="errors.matricula">{{ errors.matricula }}</small>
-          </div>
-
-          <div class="form-actions">
-            <button type="button" @click="showModal = false" class="cancel-button">
-              Cancelar
-            </button>
-            <button type="submit" :disabled="loading || hasErrors" class="submit-button">
-              <span v-if="loading" class="spinner"></span>
-              {{ loading ? 'Cadastrando...' : 'Cadastrar Aluno' }}
-            </button>
-          </div>
-
-          <div v-if="message" :class="['message', messageType]">
-            {{ message }}
-          </div>
-        </form>
-      </div>
-    </div>
+        <div v-if="message" :class="['message', messageType]">
+          {{ message }}
+        </div>
+      </form>
+    </va-modal>
 
     <!-- Lista de Alunos -->
     <div class="alunos-list">
@@ -132,16 +95,16 @@
 
 <script>
 import { ref, computed } from 'vue';
-import InputText from 'primevue/inputtext';
-import Password from 'primevue/password';
+import { VaInput, VaButton, VaModal } from 'vuestic-ui'
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 
 export default {
   name: 'GerenciarAlunos',
   components: {
-    InputText,
-    Password
+    VaInput,
+    VaButton,
+    VaModal
   },
   setup() {
     const router = useRouter();
@@ -154,14 +117,16 @@ export default {
     const alunos = ref([]);
 
     const formData = ref({
-      nome: '',
+      username: '',
+      password: '',
       email: '',
       matricula: '',
       tipo: 'aluno'
     });
 
     const errors = ref({
-      nome: '',
+      username: '',
+      password: '',
       email: '',
       matricula: ''
     });
@@ -183,9 +148,14 @@ export default {
       errors.value[field] = '';
       
       switch (field) {
-        case 'nome':
-          if (formData.value.nome.length < 3) {
-            errors.value.nome = 'O nome deve ter pelo menos 3 caracteres';
+        case 'username':
+          if (formData.value.username.length < 3) {
+            errors.value.username = 'O nome de usuário deve ter pelo menos 3 caracteres';
+          }
+          break;
+        case 'password':
+          if (formData.value.password.length < 8) {
+            errors.value.password = 'A senha deve ter pelo menos 8 caracteres';
           }
           break;
         case 'email':
@@ -203,7 +173,7 @@ export default {
     };
 
     const validateForm = () => {
-      ['nome', 'email', 'matricula'].forEach(field => {
+      ['username', 'password', 'email', 'matricula'].forEach(field => {
         validateField(field);
       });
       return !hasErrors.value;
@@ -220,7 +190,7 @@ export default {
         // Criar objeto com dados do formulário e senha igual à matrícula
         const dadosCadastro = {
           ...formData.value,
-          password: formData.value.matricula // Define a senha igual à matrícula
+          password: formData.value.password // Define a senha igual à matrícula
         };
 
         const response = await axios.post('http://localhost:8000/api/v1/gerenciador/alunos', dadosCadastro, {
@@ -248,13 +218,15 @@ export default {
 
     const resetForm = () => {
       formData.value = {
-        nome: '',
+        username: '',
+        password: '',
         email: '',
         matricula: '',
         tipo: 'aluno'
       };
       errors.value = {
-        nome: '',
+        username: '',
+        password: '',
         email: '',
         matricula: ''
       };

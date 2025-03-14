@@ -128,11 +128,12 @@
 <script>
 import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
-import { useToast } from 'primevue/usetoast';
+import { useGlobalConfig } from 'vuestic-ui';
 
 export default {
   name: 'Perfil',
   setup() {
+    const { setGlobalConfig } = useGlobalConfig();
     const editMode = ref(false);
     const loading = ref(false);
     const message = ref('');
@@ -164,7 +165,17 @@ export default {
         .slice(0, 2);
     });
 
-    const toast = useToast();
+    const showNotification = (text, type = 'success') => {
+      setGlobalConfig({
+        notifications: {
+          show: {
+            text,
+            color: type,
+            duration: 3000,
+          },
+        },
+      });
+    };
 
     const loadUserData = async () => {
       try {
@@ -191,12 +202,7 @@ export default {
           originalData.value = { ...formData.value };
         }
       } catch (error) {
-        toast.add({
-          severity: 'error',
-          summary: 'Erro',
-          detail: 'Erro ao carregar dados do perfil',
-          life: 3000
-        });
+        showNotification('Erro ao carregar dados do perfil', 'danger');
         console.error(error);
       }
     };
@@ -253,8 +259,8 @@ export default {
         };
 
         if (formData.value.newPassword) {
-          updateData.currentPassword = formData.value.currentPassword;
-          updateData.newPassword = formData.value.newPassword;
+          updateData.senha_atual = formData.value.currentPassword;
+          updateData.nova_senha = formData.value.newPassword;
         }
 
         const response = await axios.put('http://localhost:8000/api/v1/usuarios/perfil', updateData, {
@@ -264,16 +270,15 @@ export default {
         });
 
         if (response.data.status === 'success') {
-          message.value = 'Perfil atualizado com sucesso!';
-          messageType.value = 'success';
+          showNotification('Perfil atualizado com sucesso');
           editMode.value = false;
-          localStorage.setItem('userName', formData.value.nome);
-          localStorage.setItem('userEmail', formData.value.email);
           originalData.value = { ...formData.value };
+          formData.value.currentPassword = '';
+          formData.value.newPassword = '';
+          formData.value.confirmPassword = '';
         }
-      } catch (err) {
-        message.value = err.response?.data?.message || 'Erro ao atualizar perfil';
-        messageType.value = 'error';
+      } catch (error) {
+        showNotification(error.response?.data?.message || 'Erro ao atualizar perfil', 'danger');
       } finally {
         loading.value = false;
       }

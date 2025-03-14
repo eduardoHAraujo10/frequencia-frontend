@@ -2,172 +2,120 @@
   <div class="gerenciamento-pontos-container">
     <div class="header-actions">
       <h2>Gerenciamento de Pontos</h2>
-      <Button 
-        icon="pi pi-plus" 
-        label="Adicionar Novo Registro" 
-        class="add-button"
-        @click="showModal = true"
-      />
+      <va-button @click="showModal = true">
+        <va-icon name="mdi-plus" />
+        Adicionar Novo Registro
+      </va-button>
     </div>
 
-    <!-- Modal de Cadastro/Edição -->
-    <div v-if="showModal" class="modal-overlay">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>{{ modoEdicao ? 'Editar Registro' : 'Adicionar Novo Registro' }}</h3>
-          <button @click="cancelarEdicao" class="close-button">
-            <i class="pi pi-times"></i>
-          </button>
+    <va-modal v-model="showModal" :title="modoEdicao ? 'Editar Registro' : 'Adicionar Novo Registro'" hide-default-actions>
+      <form @submit.prevent="salvarRegistro" class="register-form">
+        <div class="form-group">
+          <va-select
+            v-model="formRegistro.aluno_id"
+            :options="alunos"
+            label="Aluno"
+            text-by="nome"
+            value-by="id"
+            :error="submitted && !formRegistro.aluno_id ? 'Aluno é obrigatório' : ''"
+          />
         </div>
 
-        <form @submit.prevent="salvarRegistro" class="register-form">
-          <div class="form-group">
-            <span class="p-float-label">
-              <Dropdown 
-                id="aluno" 
-                v-model="formRegistro.aluno_id" 
-                :options="alunos"
-                optionLabel="nome" 
-                optionValue="id"
-                placeholder="Selecione um aluno"
-                class="w-full"
-                :class="{'p-invalid': submitted && !formRegistro.aluno_id}"
-                :disabled="carregandoAlunos"
-              />
-              <label for="aluno">Aluno*</label>
-            </span>
-            <small v-if="submitted && !formRegistro.aluno_id" class="p-error">Aluno é obrigatório</small>
-          </div>
+        <div class="form-group">
+          <va-date-picker
+            v-model="formRegistro.data"
+            label="Data"
+            :error="submitted && !formRegistro.data ? 'Data é obrigatória' : ''"
+          />
+        </div>
 
-          <div class="form-group">
-            <span class="p-float-label">
-              <Calendar 
-                id="data" 
-                v-model="formRegistro.data" 
-                dateFormat="dd/mm/yy"
-                :showIcon="true"
-                class="w-full"
-                :class="{'p-invalid': submitted && !formRegistro.data}"
-              />
-              <label for="data">Data*</label>
-            </span>
-            <small v-if="submitted && !formRegistro.data" class="p-error">Data é obrigatória</small>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group half">
-              <span class="p-float-label">
-                <Calendar 
-                  id="hora_entrada" 
-                  v-model="formRegistro.hora_entrada" 
-                  timeOnly 
-                  hourFormat="24"
-                  class="w-full"
-                  :class="{'p-invalid': submitted && !formRegistro.hora_entrada}"
-                />
-                <label for="hora_entrada">Hora de Entrada*</label>
-              </span>
-              <small v-if="submitted && !formRegistro.hora_entrada" class="p-error">Hora de entrada é obrigatória</small>
-            </div>
-
-            <div class="form-group half">
-              <span class="p-float-label">
-                <Calendar 
-                  id="hora_saida" 
-                  v-model="formRegistro.hora_saida" 
-                  timeOnly 
-                  hourFormat="24"
-                  class="w-full"
-                />
-                <label for="hora_saida">Hora de Saída</label>
-              </span>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <span class="p-float-label">
-              <Textarea 
-                id="observacao" 
-                v-model="formRegistro.observacao" 
-                rows="3" 
-                class="w-full"
-                autoResize
-              />
-              <label for="observacao">Observação</label>
-            </span>
-          </div>
-
-          <div class="form-actions">
-            <Button 
-              type="button" 
-              @click="cancelarEdicao" 
-              label="Cancelar" 
-              class="cancel-button"
-            />
-            <Button 
-              type="submit" 
-              :label="modoEdicao ? 'Atualizar' : 'Adicionar'" 
-              :loading="salvando"
-              class="submit-button"
+        <div class="form-row">
+          <div class="form-group half">
+            <va-input
+              v-model="formRegistro.hora_entrada"
+              type="time"
+              label="Hora de Entrada"
+              :error="submitted && !formRegistro.hora_entrada ? 'Hora de entrada é obrigatória' : ''"
             />
           </div>
 
-          <div v-if="message" :class="['message', messageType]">
-            {{ message }}
+          <div class="form-group half">
+            <va-input
+              v-model="formRegistro.hora_saida"
+              type="time"
+              label="Hora de Saída"
+            />
           </div>
-        </form>
-      </div>
-    </div>
+        </div>
 
-    <!-- Lista de Registros -->
+        <div class="form-group">
+          <va-textarea
+            v-model="formRegistro.observacao"
+            label="Observação"
+            rows="3"
+          />
+        </div>
+
+        <div class="form-actions">
+          <va-button flat @click="cancelarEdicao">
+            Cancelar
+          </va-button>
+          <va-button @click="salvarRegistro" :loading="salvando">
+            {{ modoEdicao ? 'Atualizar' : 'Adicionar' }}
+          </va-button>
+        </div>
+
+        <div v-if="message" :class="['message', messageType]">
+          {{ message }}
+        </div>
+      </form>
+    </va-modal>
+
     <div class="registros-list">
       <div class="filter-bar">
         <div class="search-section">
-          <span class="p-input-icon-left">
-            <i class="pi pi-search" />
-            <InputText 
-              v-model="filtro" 
-              placeholder="Buscar registros..." 
-              class="search-input"
-            />
-          </span>
+          <va-input
+            v-model="filtro"
+            placeholder="Buscar registros..."
+            prepend-icon="mdi-magnify"
+          />
         </div>
         <div class="filter-section">
-          <Dropdown 
-            v-model="alunoSelecionado" 
+          <va-select
+            v-model="alunoSelecionado"
             :options="alunos"
-            optionLabel="nome" 
-            optionValue="id"
+            text-by="nome"
+            value-by="id"
             placeholder="Filtrar por aluno"
             class="filter-dropdown"
-            @change="filtrarPorAluno"
+            @update:modelValue="filtrarPorAluno"
             :disabled="carregandoAlunos"
           />
-          <Button 
-            icon="pi pi-filter-slash" 
-            class="p-button-outlined p-button-secondary"
+          <va-button 
+            flat
             @click="limparFiltro"
             :disabled="!alunoSelecionado"
-            title="Limpar filtro"
-          />
-          <Button 
-            icon="pi pi-refresh" 
-            class="p-button-outlined"
+          >
+            <va-icon name="mdi-close" />
+          </va-button>
+          <va-button 
+            flat
             @click="recarregarTudo"
             :disabled="carregando || carregandoAlunos"
-            title="Atualizar"
-          />
+          >
+            <va-icon name="mdi-refresh" />
+          </va-button>
         </div>
       </div>
 
       <div class="table-container">
         <div v-if="carregando" class="loading-container">
-          <ProgressSpinner style="width: 50px; height: 50px" strokeWidth="4" />
+          <va-progress-circle indeterminate />
           <p>Carregando registros...</p>
         </div>
 
         <div v-else-if="registros.length === 0" class="no-data">
-          <i class="pi pi-info-circle"></i>
+          <va-icon name="mdi-information" size="large" />
           <p>Nenhum registro encontrado.</p>
           <p class="sub-text">Adicione um novo registro ou altere os filtros de busca.</p>
         </div>
@@ -195,9 +143,12 @@
                 <div class="truncate-text">{{ registro.observacao || '-' }}</div>
               </td>
               <td class="actions">
-                <button class="action-button edit" @click="editarRegistro(registro)">
-                  <i class="pi pi-pencil"></i>
-                </button>
+                <va-button 
+                  icon="mdi-pencil"
+                  color="info"
+                  size="small"
+                  @click="editarRegistro(registro)"
+                />
               </td>
             </tr>
           </tbody>
@@ -210,30 +161,34 @@
 <script>
 import { ref, computed, onMounted } from 'vue';
 import registroService from '@/services/registroService';
-import { useToast } from 'vue-toastification';
-
-// Componentes PrimeVue
-import Button from 'primevue/button';
-import InputText from 'primevue/inputtext';
-import Dropdown from 'primevue/dropdown';
-import Calendar from 'primevue/calendar';
-import Textarea from 'primevue/textarea';
-import ProgressSpinner from 'primevue/progressspinner';
+import { 
+  VaInput, 
+  VaButton, 
+  VaSelect, 
+  VaDatePicker, 
+  VaTextarea,
+  VaModal,
+  VaIcon,
+  VaProgressCircle,
+  useGlobalConfig
+} from 'vuestic-ui'
 
 export default {
   name: 'GerenciamentoPontos',
   
   components: {
-    Button,
-    InputText,
-    Dropdown,
-    Calendar,
-    Textarea,
-    ProgressSpinner
+    VaInput,
+    VaButton,
+    VaSelect,
+    VaDatePicker,
+    VaTextarea,
+    VaModal,
+    VaIcon,
+    VaProgressCircle
   },
   
   setup() {
-    const toast = useToast();
+    const { setGlobalConfig } = useGlobalConfig();
     const registros = ref([]);
     const registrosOriginais = ref([]);
     const carregando = ref(false);
@@ -274,6 +229,18 @@ export default {
         (registro.observacao && registro.observacao.toLowerCase().includes(termoBusca))
       );
     });
+
+    const showNotification = (text, type = 'success') => {
+      setGlobalConfig({
+        notifications: {
+          show: {
+            text,
+            color: type,
+            duration: 3000,
+          },
+        },
+      });
+    };
 
     // Carregar alunos da API
     const carregarAlunos = async () => {
@@ -327,15 +294,15 @@ export default {
             }
           } else {
             console.warn('Nenhum aluno encontrado na resposta da API');
-            toast.warning('Nenhum aluno encontrado');
+            showNotification('Nenhum aluno encontrado', 'warning');
           }
         } else {
           console.warn('Resposta da API não contém dados de alunos');
-          toast.warning('Não foi possível carregar os alunos');
+          showNotification('Não foi possível carregar os alunos', 'warning');
         }
       } catch (error) {
         console.error('Erro ao carregar alunos:', error);
-        toast.error('Erro ao carregar alunos');
+        showNotification('Erro ao carregar alunos', 'error');
       } finally {
         carregandoAlunos.value = false;
       }
@@ -379,7 +346,7 @@ export default {
         }
       } catch (error) {
         console.error('Erro ao carregar registros:', error);
-        toast.error('Erro ao carregar registros');
+        showNotification('Erro ao carregar registros', 'error');
         registros.value = [];
       } finally {
         carregando.value = false;
@@ -477,7 +444,7 @@ export default {
       
       // Validar campos obrigatórios
       if (!formRegistro.value.aluno_id || !formRegistro.value.data || !formRegistro.value.hora_entrada) {
-        toast.error('Preencha todos os campos obrigatórios');
+        showNotification('Preencha todos os campos obrigatórios', 'error');
         return;
       }
       
@@ -505,7 +472,7 @@ export default {
           if (response && response.data) {
             message.value = 'Registro atualizado com sucesso!';
             messageType.value = 'success';
-            toast.success('Registro atualizado com sucesso!');
+            showNotification('Registro atualizado com sucesso!');
             
             // Atualizar lista após edição
             await carregarRegistros();
@@ -523,7 +490,7 @@ export default {
           if (response && response.data) {
             message.value = 'Registro adicionado com sucesso!';
             messageType.value = 'success';
-            toast.success('Registro adicionado com sucesso!');
+            showNotification('Registro adicionado com sucesso!');
             
             // Atualizar lista após adição
             await carregarRegistros();
@@ -538,7 +505,7 @@ export default {
         console.error('Erro ao salvar registro:', error);
         message.value = error.response?.data?.message || 'Erro ao salvar registro';
         messageType.value = 'error';
-        toast.error(message.value);
+        showNotification(message.value, 'error');
       } finally {
         salvando.value = false;
       }
@@ -548,7 +515,7 @@ export default {
     const recarregarTudo = async () => {
       await carregarAlunos();
       await carregarRegistros();
-      toast.info('Dados atualizados');
+      showNotification('Dados atualizados');
     };
 
     // Debug: exibir dados no console
@@ -558,7 +525,7 @@ export default {
       console.log('Registros processados:', registros.value);
       console.log('Filtro atual:', filtro.value);
       console.log('Aluno selecionado:', alunoSelecionado.value);
-      toast.info('Dados exibidos no console');
+      showNotification('Dados exibidos no console');
     };
 
     // Carregar dados ao montar o componente
