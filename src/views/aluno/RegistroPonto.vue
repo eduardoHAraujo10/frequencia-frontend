@@ -508,17 +508,37 @@ export default {
       
       this.loadingAjuste = true;
       try {
-        const response = await axios.post('http://localhost:8000/api/v1/registros/solicitar-ajuste', {
-          registro_id: this.registroParaAjuste.id,
+        // Garante que o ID seja um número inteiro usando + para conversão
+        const registroId = +this.registroParaAjuste.id;
+        
+        // Verifica se é um número válido
+        if (isNaN(registroId) || !Number.isInteger(registroId)) {
+          throw new Error('ID do registro inválido');
+        }
+
+        // Log para debug
+        console.log('ID original:', this.registroParaAjuste.id);
+        console.log('ID convertido:', registroId);
+        console.log('Tipo do ID:', typeof registroId);
+        
+        const payload = {
+          registro_id: registroId,
           novo_horario: this.novoHorario,
           justificativa: this.justificativa
-        }, {
+        };
+
+        // Log do payload final
+        console.log('Payload final:', JSON.stringify(payload));
+        
+        const response = await axios.post('http://localhost:8000/api/v1/registros/ajuste', payload, {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
           }
         });
 
-        if (response.data.status === 'success') {
+        if (response.data.success) {
           this.statusMessage = 'Solicitação enviada com sucesso!';
           this.statusClass = 'success';
           this.fecharModal();
@@ -528,8 +548,9 @@ export default {
           this.statusClass = 'error';
         }
       } catch (error) {
-        this.statusMessage = error.response?.data?.message || 'Erro ao enviar solicitação';
+        this.statusMessage = error.response?.data?.message || error.message || 'Erro ao enviar solicitação';
         this.statusClass = 'error';
+        console.error('Erro detalhado:', error.response?.data || error);
       } finally {
         this.loadingAjuste = false;
       }

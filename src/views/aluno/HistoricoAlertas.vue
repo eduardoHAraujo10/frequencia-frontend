@@ -1,7 +1,7 @@
 <template>
   <div class="historico-alertas-container">
     <div class="page-header">
-      <h2>Histórico de Alertas de Esquecimento</h2>
+      <h2>Histórico de Solicitações</h2>
       <router-link to="/registro-ponto" class="btn-voltar">
         <i class="fas fa-arrow-left"></i>
         Voltar
@@ -16,6 +16,15 @@
           <option value="pendente">Pendentes</option>
           <option value="aprovado">Aprovados</option>
           <option value="rejeitado">Rejeitados</option>
+        </select>
+      </div>
+
+      <div class="filtro-grupo">
+        <label>Tipo:</label>
+        <select v-model="filtroTipo" class="filtro-select">
+          <option value="todos">Todos</option>
+          <option value="alerta">Alertas de Esquecimento</option>
+          <option value="ajuste">Ajustes de Horário</option>
         </select>
       </div>
 
@@ -39,49 +48,74 @@
 
     <div v-if="loading" class="loading-container">
       <div class="spinner"></div>
-      <p>Carregando alertas...</p>
+      <p>Carregando solicitações...</p>
     </div>
 
     <div v-else-if="error" class="error-message">
       {{ error }}
     </div>
 
-    <div v-else-if="alertasFiltrados.length === 0" class="no-data">
+    <div v-else-if="solicitacoesFiltradas.length === 0" class="no-data">
       <i class="fas fa-bell-slash"></i>
-      <p>Nenhum alerta encontrado para os filtros selecionados</p>
+      <p>Nenhuma solicitação encontrada para os filtros selecionados</p>
     </div>
 
     <div v-else class="alertas-grid">
-      <div v-for="alerta in alertasFiltrados" :key="alerta.id" class="alerta-card">
+      <div v-for="item in solicitacoesFiltradas" :key="item.id" class="alerta-card">
         <div class="alerta-header">
-          <div class="alerta-data">
-            <i class="fas fa-calendar"></i>
-            {{ formatarData(alerta.data) }}
+          <div class="tipo-badge" :class="item.tipoSolicitacao">
+            {{ item.tipoSolicitacao === 'alerta' ? 'Alerta de Esquecimento' : 'Ajuste de Horário' }}
           </div>
-          <div class="alerta-horario">
-            <i class="fas fa-clock"></i>
-            {{ formatarHora(alerta.horario_previsto) }}
-          </div>
-          <div class="alerta-tipo">
-            <i class="fas fa-sign-in-alt" v-if="alerta.tipo === 'entrada'"></i>
-            <i class="fas fa-sign-out-alt" v-else></i>
-            {{ alerta.tipo === 'entrada' ? 'Entrada' : 'Saída' }}
-          </div>
-          <div class="alerta-status" :class="alerta.status">
-            {{ traduzirStatus(alerta.status) }}
+          <div class="alerta-status" :class="item.status">
+            {{ traduzirStatus(item.status) }}
           </div>
         </div>
 
-        <div class="alerta-body">
-          <strong>Justificativa:</strong>
-          <p>{{ alerta.justificativa }}</p>
+        <div class="alerta-content">
+          <template v-if="item.tipoSolicitacao === 'alerta'">
+            <div class="info-row">
+              <span class="label">Data:</span>
+              <span class="value">{{ formatarData(item.data) }}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">Horário Previsto:</span>
+              <span class="value">{{ formatarHora(item.horario_solicitado) }}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">Tipo:</span>
+              <span class="value">{{ item.tipo === 'entrada' ? 'Entrada' : 'Saída' }}</span>
+            </div>
+          </template>
+          <template v-else>
+            <div class="info-row">
+              <span class="label">Data:</span>
+              <span class="value">{{ formatarData(item.data) }}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">Horário Atual:</span>
+              <span class="value">{{ formatarHora(item.horario_atual) }}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">Horário Solicitado:</span>
+              <span class="value">{{ formatarHora(item.horario_solicitado) }}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">Tipo:</span>
+              <span class="value">{{ item.tipo === 'entrada' ? 'Entrada' : 'Saída' }}</span>
+            </div>
+          </template>
+
+          <div class="info-row">
+            <span class="label">Justificativa:</span>
+            <p class="justificativa">{{ item.justificativa }}</p>
+          </div>
         </div>
 
-        <div v-if="alerta.observacao_coordenador" class="alerta-feedback">
+        <div v-if="item.observacao_coordenador" class="alerta-feedback">
           <strong>Feedback do Coordenador:</strong>
-          <p>{{ alerta.observacao_coordenador }}</p>
-          <small class="feedback-data">
-            Respondido em: {{ formatarDataHora(alerta.data_aprovacao) }}
+          <p>{{ item.observacao_coordenador }}</p>
+          <small class="feedback-data" v-if="item.data_resposta">
+            Respondido em: {{ formatarDataHora(item.data_resposta) }}
           </small>
         </div>
       </div>
@@ -114,10 +148,11 @@ export default {
   name: 'HistoricoAlertas',
   data() {
     return {
-      alertas: [],
+      solicitacoes: [],
       loading: false,
       error: null,
       filtroStatus: 'todos',
+      filtroTipo: 'todos',
       filtroDataInicio: '',
       filtroDataFim: '',
       paginaAtual: 1,
@@ -126,67 +161,131 @@ export default {
     };
   },
   computed: {
-    alertasFiltrados() {
-      let alertasFiltrados = [...this.alertas];
+    solicitacoesFiltradas() {
+      let solicitacoesFiltradas = [...this.solicitacoes];
 
       if (this.filtroStatus !== 'todos') {
-        alertasFiltrados = alertasFiltrados.filter(alerta => alerta.status === this.filtroStatus);
+        solicitacoesFiltradas = solicitacoesFiltradas.filter(item => item.status === this.filtroStatus);
+      }
+
+      if (this.filtroTipo !== 'todos') {
+        solicitacoesFiltradas = solicitacoesFiltradas.filter(item => item.tipoSolicitacao === this.filtroTipo);
       }
 
       if (this.filtroDataInicio) {
-        alertasFiltrados = alertasFiltrados.filter(alerta => 
-          new Date(alerta.data) >= new Date(this.filtroDataInicio)
-        );
+        solicitacoesFiltradas = solicitacoesFiltradas.filter(item => {
+          const dataItem = item.tipoSolicitacao === 'alerta' ? item.data : item.horario_atual;
+          return new Date(dataItem) >= new Date(this.filtroDataInicio);
+        });
       }
 
       if (this.filtroDataFim) {
-        alertasFiltrados = alertasFiltrados.filter(alerta => 
-          new Date(alerta.data) <= new Date(this.filtroDataFim)
-        );
+        solicitacoesFiltradas = solicitacoesFiltradas.filter(item => {
+          const dataItem = item.tipoSolicitacao === 'alerta' ? item.data : item.horario_atual;
+          return new Date(dataItem) <= new Date(this.filtroDataFim);
+        });
       }
 
-      return alertasFiltrados;
+      // Ordenar por data de criação (mais recentes primeiro)
+      solicitacoesFiltradas.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+      // Aplicar paginação
+      const inicio = (this.paginaAtual - 1) * this.itensPorPagina;
+      const fim = inicio + this.itensPorPagina;
+      return solicitacoesFiltradas.slice(inicio, fim);
     }
   },
   methods: {
-    async carregarAlertas() {
+    async carregarSolicitacoes() {
       this.loading = true;
       this.error = null;
 
       try {
-        const response = await axios.get('http://localhost:8000/api/v1/registros/alerta-esquecimento', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
+        // Carregar alertas de esquecimento
+        const alertasResponse = await axios.get('http://localhost:8000/api/v1/registros/alerta-esquecimento', {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
 
-        if (response.data.success) {
-          this.alertas = response.data.data || [];
-          // Ordena os alertas por data em ordem decrescente
-          this.alertas.sort((a, b) => new Date(b.data) - new Date(a.data));
-          this.totalPaginas = Math.ceil(this.alertas.length / this.itensPorPagina);
-        }
+        // Carregar solicitações de ajuste
+        const ajustesResponse = await axios.get('http://localhost:8000/api/v1/registros/solicitacoes-ajuste', {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+
+        console.log('Alertas Response:', alertasResponse.data);
+        console.log('Ajustes Response:', ajustesResponse.data);
+
+        const alertas = alertasResponse.data.success 
+          ? alertasResponse.data.data.map(alerta => ({
+              id: alerta.id,
+              tipoSolicitacao: 'alerta',
+              data: alerta.data,
+              horario_atual: null,
+              horario_solicitado: alerta.horario_previsto,
+              tipo: alerta.tipo,
+              status: alerta.status || 'pendente',
+              justificativa: alerta.justificativa,
+              observacao_coordenador: alerta.observacao_coordenador,
+              data_resposta: alerta.data_resposta,
+              created_at: alerta.created_at
+            }))
+          : [];
+
+        const ajustes = ajustesResponse.data.status === 'success'
+          ? ajustesResponse.data.data.map(ajuste => ({
+              id: ajuste.id,
+              tipoSolicitacao: 'ajuste',
+              data: new Date(ajuste.horario_atual).toISOString().split('T')[0],
+              horario_atual: ajuste.horario_atual,
+              horario_solicitado: ajuste.horario_solicitado,
+              tipo: ajuste.tipo_registro,
+              status: ajuste.status || 'pendente',
+              justificativa: ajuste.justificativa,
+              observacao_coordenador: ajuste.observacao_coordenador,
+              data_resposta: ajuste.data_resposta,
+              created_at: ajuste.created_at,
+              nome_aluno: ajuste.nome_aluno,
+              matricula: ajuste.matricula
+            }))
+          : [];
+
+        console.log('Alertas processados:', alertas);
+        console.log('Ajustes processados:', ajustes);
+
+        // Combinar as duas listas
+        this.solicitacoes = [...alertas, ...ajustes];
+        
+        console.log('Solicitações combinadas:', this.solicitacoes);
+        
+        // Ordenar por data de criação (mais recentes primeiro)
+        this.solicitacoes.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        
+        this.totalPaginas = Math.ceil(this.solicitacoes.length / this.itensPorPagina);
+
       } catch (error) {
-        this.error = 'Erro ao carregar alertas. Tente novamente mais tarde.';
-        console.error('Erro ao carregar alertas:', error);
+        console.error('Erro ao carregar solicitações:', error);
+        if (error.response && error.response.data && error.response.data.message) {
+          this.error = error.response.data.message;
+        } else {
+          this.error = 'Erro ao carregar solicitações. Por favor, tente novamente mais tarde.';
+        }
       } finally {
         this.loading = false;
       }
     },
     formatarData(data) {
       if (!data) return '';
-      return new Date(data).toLocaleDateString('pt-BR');
+      const date = new Date(data);
+      return date.toLocaleDateString('pt-BR');
     },
-    formatarHora(hora) {
-      if (!hora) return '';
-      const date = new Date(hora);
-      const horas = String(date.getHours()).padStart(2, '0');
-      const minutos = String(date.getMinutes()).padStart(2, '0');
-      return `${horas}:${minutos}`;
+    formatarHora(dataHora) {
+      if (!dataHora) return '';
+      const date = new Date(dataHora);
+      return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     },
     formatarDataHora(dataHora) {
       if (!dataHora) return '';
-      return new Date(dataHora).toLocaleString('pt-BR');
+      const date = new Date(dataHora);
+      return date.toLocaleString('pt-BR');
     },
     traduzirStatus(status) {
       const traducoes = {
@@ -196,15 +295,20 @@ export default {
       };
       return traducoes[status] || status;
     },
-    mudarPagina(novaPagina) {
-      this.paginaAtual = novaPagina;
+    mudarPagina(pagina) {
+      if (pagina >= 1 && pagina <= this.totalPaginas) {
+        this.paginaAtual = pagina;
+      }
     }
   },
   created() {
-    this.carregarAlertas();
+    this.carregarSolicitacoes();
   },
   watch: {
     filtroStatus() {
+      this.paginaAtual = 1;
+    },
+    filtroTipo() {
       this.paginaAtual = 1;
     },
     filtroDataInicio() {
@@ -219,7 +323,7 @@ export default {
 
 <style scoped>
 .historico-alertas-container {
-  padding: 2rem;
+  padding: 20px;
   max-width: 1200px;
   margin: 0 auto;
 }
@@ -228,42 +332,52 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 30px;
+}
+
+.page-header h2 {
+  color: #2c3e50;
+  margin: 0;
 }
 
 .btn-voltar {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  text-decoration: none;
-  color: #666;
-  padding: 0.5rem 1rem;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: #f0f0f0;
   border-radius: 4px;
-  transition: all 0.3s ease;
+  text-decoration: none;
+  color: #333;
+  transition: background-color 0.3s;
 }
 
 .btn-voltar:hover {
-  background-color: #f0f0f0;
+  background-color: #e0e0e0;
 }
 
 .filtros-section {
   display: flex;
-  gap: 2rem;
-  margin-bottom: 2rem;
-  padding: 1rem;
-  background-color: #f8f9fa;
-  border-radius: 8px;
+  gap: 20px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
 }
 
 .filtro-grupo {
   display: flex;
-  align-items: center;
-  gap: 1rem;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filtro-grupo label {
+  color: #495057;
+  font-weight: 500;
+  min-width: 80px;
 }
 
 .filtro-select,
 .filtro-input {
-  padding: 0.5rem;
+  padding: 8px;
   border: 1px solid #ddd;
   border-radius: 4px;
   min-width: 150px;
@@ -272,83 +386,156 @@ export default {
 .periodo-inputs {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 10px;
 }
 
 .alertas-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
 }
 
 .alerta-card {
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 1.5rem;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .alerta-header {
   display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #eee;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tipo-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+.tipo-badge.alerta {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.tipo-badge.ajuste {
+  background-color: #e0e7ff;
+  color: #3730a3;
 }
 
 .alerta-status {
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.875rem;
-  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.9em;
 }
 
 .alerta-status.pendente {
-  background-color: #fff3cd;
-  color: #856404;
+  background-color: #f3f4f6;
+  color: #374151;
 }
 
 .alerta-status.aprovado {
-  background-color: #d4edda;
-  color: #155724;
+  background-color: #d1fae5;
+  color: #065f46;
 }
 
 .alerta-status.rejeitado {
-  background-color: #f8d7da;
-  color: #721c24;
+  background-color: #fee2e2;
+  color: #991b1b;
 }
 
-.alerta-body {
-  margin-bottom: 1rem;
+.alerta-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.info-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.info-row .label {
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.info-row .value {
+  color: #111827;
+}
+
+.justificativa {
+  margin: 0;
+  color: #374151;
+  font-size: 0.95em;
+  line-height: 1.5;
 }
 
 .alerta-feedback {
-  padding-top: 1rem;
-  border-top: 1px solid #eee;
+  background-color: #f9fafb;
+  padding: 12px;
+  border-radius: 4px;
+  font-size: 0.95em;
 }
 
 .feedback-data {
   display: block;
-  margin-top: 0.5rem;
-  color: #666;
-  font-size: 0.875rem;
+  margin-top: 8px;
+  color: #6b7280;
+  font-size: 0.9em;
+}
+
+.paginacao {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 30px;
+}
+
+.page-button {
+  padding: 8px 16px;
+  border: none;
+  background-color: #f3f4f6;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.page-button:hover:not(:disabled) {
+  background-color: #e5e7eb;
+}
+
+.page-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-info {
+  color: #4b5563;
 }
 
 .loading-container {
-  text-align: center;
-  padding: 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px;
 }
 
 .spinner {
+  border: 4px solid #f3f4f6;
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
   width: 40px;
   height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #007bff;
-  border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin: 0 auto 1rem;
 }
 
 @keyframes spin {
@@ -358,72 +545,25 @@ export default {
 
 .error-message {
   text-align: center;
-  color: #dc3545;
-  padding: 1rem;
-  background-color: #f8d7da;
-  border-radius: 4px;
+  color: #dc2626;
+  padding: 20px;
+  background-color: #fee2e2;
+  border-radius: 8px;
+  margin: 20px 0;
 }
 
 .no-data {
   text-align: center;
-  padding: 3rem;
-  color: #666;
+  padding: 40px;
+  color: #6b7280;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
 }
 
 .no-data i {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  color: #aaa;
-}
-
-.paginacao {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  margin-top: 2rem;
-}
-
-.page-button {
-  padding: 0.5rem 1rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background: white;
-  cursor: pointer;
-}
-
-.page-button:disabled {
+  font-size: 2em;
   opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.page-info {
-  color: #666;
-}
-
-@media (max-width: 768px) {
-  .alertas-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .filtros-section {
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .filtro-grupo {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .periodo-inputs {
-    flex-direction: column;
-    width: 100%;
-  }
-
-  .filtro-select,
-  .filtro-input {
-    width: 100%;
-  }
 }
 </style> 
