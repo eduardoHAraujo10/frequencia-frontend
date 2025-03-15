@@ -18,40 +18,13 @@
     </div>
 
     <div v-else class="content">
-      <!-- Informações do Aluno -->
-      <div class="aluno-info">
-        <div class="info-card">
-          <div class="info-header">
-            <i class="fas fa-user-graduate"></i>
-            <h3>{{ aluno.nome }}</h3>
-          </div>
-          <div class="info-content">
-            <div class="info-item">
-              <span class="label">Matrícula:</span>
-              <span class="value">{{ aluno.matricula }}</span>
-            </div>
-            <div class="info-item">
-              <span class="label">Frequência Total:</span>
-              <span :class="['value', 'frequencia-badge', getFrequenciaClass(estatisticas.porcentagem_presenca)]">
-                {{ estatisticas.porcentagem_presenca }}%
-              </span>
-            </div>
-            <div class="info-item">
-              <span class="label">Dias Presentes:</span>
-              <span class="value">{{ estatisticas.dias_presenca }} / {{ periodo.total_dias }} dias</span>
-            </div>
-            <div class="info-item">
-              <span class="label">Total de Horas:</span>
-              <span class="value">{{ estatisticas.total_horas_trabalhadas }}h</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- Filtros de Período -->
       <div class="filtros">
         <div class="periodo-select">
-          <label>Período:</label>
+          <label>
+            <i class="fas fa-calendar-alt"></i>
+            Período:
+          </label>
           <select v-model="filtro.periodo">
             <option value="hoje">Hoje</option>
             <option value="7">Últimos 7 dias</option>
@@ -63,11 +36,17 @@
 
         <div v-if="filtro.periodo === 'custom'" class="date-range">
           <div class="date-input">
-            <label>De:</label>
+            <label>
+              <i class="fas fa-calendar-day"></i>
+              De:
+            </label>
             <input type="date" v-model="filtro.dataInicio" />
           </div>
           <div class="date-input">
-            <label>Até:</label>
+            <label>
+              <i class="fas fa-calendar-day"></i>
+              Até:
+            </label>
             <input type="date" v-model="filtro.dataFim" />
           </div>
         </div>
@@ -78,58 +57,93 @@
         </button>
       </div>
 
-      <!-- Histórico de Registros -->
-      <div class="registros-section">
-        <h3>Histórico de Registros</h3>
-        <div class="registros-table">
-          <table>
-            <thead>
-              <tr>
-                <th>Data</th>
-                <th>Dia da Semana</th>
-                <th>Entrada</th>
-                <th>Saída</th>
-                <th>Horas Trabalhadas</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="registro in registros" :key="registro.data">
-                <td>{{ formatarData(registro.data) }}</td>
-                <td>{{ traduzirDiaSemana(registro.dia_semana) }}</td>
-                <td>{{ registro.entrada || '-' }}</td>
-                <td>{{ registro.saida || '-' }}</td>
-                <td>{{ registro.horas_trabalhadas || '-' }}</td>
-              </tr>
-            </tbody>
-          </table>
+      <div class="main-content">
+        <!-- Informações do Aluno -->
+        <div class="aluno-info">
+          <div class="info-card">
+            <div class="info-header">
+              <i class="fas fa-user-graduate"></i>
+              <h3>{{ aluno.nome }}</h3>
+            </div>
+            <div class="info-content">
+              <div class="info-item">
+                <span class="label">Matrícula:</span>
+                <span class="value">{{ aluno.matricula }}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Frequência Total:</span>
+                <span :class="['value', 'frequencia-badge', getFrequenciaClass(estatisticas.porcentagem_presenca)]">
+                  {{ estatisticas.porcentagem_presenca }}%
+                </span>
+              </div>
+              <div class="info-item">
+                <span class="label">Dias Presentes:</span>
+                <span class="value">{{ estatisticas.dias_presenca }} / {{ periodo.total_dias }} dias</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Total de Horas:</span>
+                <span class="value">{{ estatisticas.total_horas_trabalhadas }}h</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div v-if="!registros.length" class="no-data">
-          <i class="fas fa-calendar-times"></i>
-          <p>Nenhum registro encontrado para o período selecionado</p>
-        </div>
+        <!-- Histórico de Registros -->
+        <div class="registros-section">
+          <h3>
+            <i class="fas fa-history"></i>
+            Histórico de Registros
+          </h3>
+          <div class="registros-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Dia da Semana</th>
+                  <th>Entrada</th>
+                  <th>Saída</th>
+                  <th>Horas Trabalhadas</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="registro in registros" :key="registro.data">
+                  <td>{{ formatarData(registro.data) }}</td>
+                  <td>{{ traduzirDiaSemana(registro.dia_semana) }}</td>
+                  <td>{{ registro.entrada || '-' }}</td>
+                  <td>{{ registro.saida || '-' }}</td>
+                  <td>{{ registro.horas_trabalhadas || '-' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
-        <!-- Paginação -->
-        <div v-if="paginacao.ultimaPagina > 1" class="paginacao">
-          <button 
-            class="page-button"
-            :disabled="paginacao.paginaAtual === 1"
-            @click="buscarFrequencia(paginacao.paginaAtual - 1)"
-          >
-            <i class="fas fa-chevron-left"></i>
-          </button>
-          
-          <span class="page-info">
-            Página {{ paginacao.paginaAtual }} de {{ paginacao.ultimaPagina }}
-          </span>
-          
-          <button 
-            class="page-button"
-            :disabled="paginacao.paginaAtual === paginacao.ultimaPagina"
-            @click="buscarFrequencia(paginacao.paginaAtual + 1)"
-          >
-            <i class="fas fa-chevron-right"></i>
-          </button>
+          <div v-if="!registros.length" class="no-data">
+            <i class="fas fa-calendar-times"></i>
+            <p>Nenhum registro encontrado para o período selecionado</p>
+          </div>
+
+          <!-- Paginação -->
+          <div v-if="paginacao.ultimaPagina > 1" class="paginacao">
+            <button 
+              class="page-button"
+              :disabled="paginacao.paginaAtual === 1"
+              @click="buscarFrequencia(paginacao.paginaAtual - 1)"
+            >
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            
+            <span class="page-info">
+              Página {{ paginacao.paginaAtual }} de {{ paginacao.ultimaPagina }}
+            </span>
+            
+            <button 
+              class="page-button"
+              :disabled="paginacao.paginaAtual === paginacao.ultimaPagina"
+              @click="buscarFrequencia(paginacao.paginaAtual + 1)"
+            >
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -281,6 +295,7 @@ export default {
   padding: 2rem;
   max-width: 1200px;
   margin: 0 auto;
+  animation: fadeIn 0.3s ease;
 }
 
 .detalhes-header {
@@ -288,56 +303,129 @@ export default {
   align-items: center;
   margin-bottom: 2rem;
   gap: 2rem;
+  background: white;
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
 .voltar-button {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background: none;
-  border: none;
-  color: #007bff;
+  gap: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+  border-radius: 8px;
+  color: white;
   cursor: pointer;
   font-weight: 500;
   transition: all 0.3s ease;
 }
 
 .voltar-button:hover {
-  color: #0056b3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(45, 55, 72, 0.2);
+}
+
+.detalhes-header h2 {
+  margin: 0;
+  color: #2d3748;
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+
+.filtros {
+  background: white;
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  margin-bottom: 2rem;
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.periodo-select {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.periodo-select label {
+  white-space: nowrap;
+}
+
+select {
+  min-width: 300px;
+  padding: 0.75rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: white;
+  transition: all 0.3s ease;
+}
+
+.filter-button {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.filter-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(66, 153, 225, 0.2);
+}
+
+.main-content {
+  display: flex;
+  gap: 2rem;
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
 .aluno-info {
-  margin-bottom: 2rem;
+  width: 300px;
+  flex-shrink: 0;
 }
 
 .info-card {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 1.5rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .info-header {
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .info-header i {
-  font-size: 2rem;
-  color: #007bff;
+  font-size: 2.5rem;
+  color: #4299e1;
 }
 
 .info-header h3 {
   margin: 0;
-  color: #333;
+  color: #2d3748;
+  font-size: 1.5rem;
+  font-weight: 600;
 }
 
 .info-content {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 1.5rem;
 }
 
@@ -348,71 +436,26 @@ export default {
 }
 
 .info-item .label {
-  color: #666;
-  font-size: 0.875rem;
+  color: #64748b;
+  font-size: 0.95rem;
+  font-weight: 500;
 }
 
 .info-item .value {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #333;
-}
-
-.filtros {
-  display: flex;
-  gap: 1rem;
-  align-items: flex-end;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
-}
-
-.periodo-select, .date-input {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-label {
-  font-weight: 600;
-  color: #444;
-}
-
-select, input[type="date"] {
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
-  min-width: 200px;
-}
-
-.filter-button {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.filter-button:hover {
-  background-color: #0056b3;
+  color: #2d3748;
 }
 
 .registros-section {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 1.5rem;
+  flex: 1;
 }
 
 .registros-section h3 {
   margin-bottom: 1.5rem;
-  color: #333;
+  color: #2d3748;
+  font-size: 1.25rem;
+  font-weight: 600;
 }
 
 table {
@@ -423,71 +466,53 @@ table {
 th, td {
   padding: 1rem;
   text-align: left;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 th {
-  background-color: #f8f9fa;
   font-weight: 600;
-  color: #444;
+  color: #4a5568;
+  background: #f8fafc;
 }
 
-.tipo-badge, .status-badge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-weight: 500;
-}
-
-.tipo-badge.entrada {
-  background-color: #d4edda;
-  color: #155724;
-}
-
-.tipo-badge.saida {
-  background-color: #f8d7da;
-  color: #721c24;
-}
-
-.status-badge.regular {
-  background-color: #d4edda;
-  color: #155724;
-}
-
-.status-badge.atrasado {
-  background-color: #fff3cd;
-  color: #856404;
+tr:hover td {
+  background: #f8fafc;
 }
 
 .frequencia-badge {
-  padding: 0.25rem 0.75rem;
+  padding: 0.5rem 1rem;
   border-radius: 20px;
-  font-weight: 500;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .frequencia-badge.alta {
-  background-color: #d4edda;
-  color: #155724;
+  background: #d1fae5;
+  color: #065f46;
 }
 
 .frequencia-badge.media {
-  background-color: #fff3cd;
-  color: #856404;
+  background: #fef3c7;
+  color: #92400e;
 }
 
 .frequencia-badge.baixa {
-  background-color: #f8d7da;
-  color: #721c24;
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 .no-data {
   text-align: center;
   padding: 3rem;
-  color: #666;
+  color: #64748b;
 }
 
 .no-data i {
-  font-size: 3rem;
-  margin-bottom: 1rem;
+  font-size: 3.5rem;
+  color: #94a3b8;
+  margin-bottom: 1.5rem;
 }
 
 .paginacao {
@@ -496,46 +521,75 @@ th {
   justify-content: center;
   gap: 1rem;
   margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e2e8f0;
 }
 
 .page-button {
-  padding: 0.5rem 1rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
   background: white;
   cursor: pointer;
   transition: all 0.3s ease;
+  color: #4299e1;
 }
 
 .page-button:hover:not(:disabled) {
-  background: #f8f9fa;
-  border-color: #007bff;
-  color: #007bff;
+  background: #4299e1;
+  border-color: #4299e1;
+  color: white;
+  transform: translateY(-2px);
 }
 
 .page-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  background: #f7fafc;
 }
 
 .page-info {
-  font-size: 0.875rem;
-  color: #666;
+  color: #4a5568;
+  font-weight: 500;
 }
 
 .loading-indicator {
-  text-align: center;
-  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 3rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
 .spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #007bff;
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e2e8f0;
+  border-top: 4px solid #4299e1;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin: 0 auto 1rem;
+}
+
+.error-message {
+  text-align: center;
+  color: #dc2626;
+  padding: 1.5rem;
+  background: #fee2e2;
+  border-radius: 12px;
+  border: 1px solid #fecaca;
+  margin: 2rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes spin {
@@ -543,44 +597,39 @@ th {
   100% { transform: rotate(360deg); }
 }
 
-.error-message {
-  text-align: center;
-  color: #dc3545;
-  padding: 1rem;
-  background-color: #f8d7da;
-  border-radius: 4px;
-}
+@media (max-width: 1024px) {
+  .main-content {
+    flex-direction: column;
+  }
 
-@media (max-width: 768px) {
-  .detalhes-container {
-    padding: 1rem;
+  .aluno-info {
+    width: 100%;
   }
 
   .info-content {
-    grid-template-columns: 1fr;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
   }
 
   .filtros {
     flex-direction: column;
+    align-items: stretch;
   }
 
-  .date-range {
+  .periodo-select {
     flex-direction: column;
-    gap: 1rem;
+    align-items: stretch;
   }
 
-  select, input[type="date"] {
-    min-width: 100%;
+  select {
+    width: 100%;
+    min-width: auto;
   }
 
-  table {
-    display: block;
-    overflow-x: auto;
-    white-space: nowrap;
-  }
-
-  th, td {
-    padding: 0.75rem;
+  .filter-button {
+    width: 100%;
+    justify-content: center;
   }
 }
 </style> 

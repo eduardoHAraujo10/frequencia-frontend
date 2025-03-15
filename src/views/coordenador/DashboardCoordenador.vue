@@ -243,6 +243,8 @@ export default {
 <style scoped>
 .dashboard-container {
   padding: 2rem;
+  max-width: 1440px;
+  margin: 0 auto;
 }
 
 .header-section {
@@ -252,45 +254,70 @@ export default {
   margin-bottom: 2rem;
 }
 
+.header-section h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
 .data-atual {
-  font-size: 1.1rem;
-  color: #666;
-  text-transform: capitalize;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  background: white;
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px var(--shadow-color);
 }
 
 .cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
 
 .card {
   background: white;
-  border-radius: 8px;
+  border-radius: 20px;
   padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
   gap: 1rem;
+  box-shadow: 0 4px 12px var(--shadow-color);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px var(--shadow-color);
 }
 
 .card-icon {
-  font-size: 2rem;
-  color: #007bff;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  background: var(--primary-color);
+  color: white;
+}
+
+.card-content {
+  flex: 1;
 }
 
 .card-content h3 {
   font-size: 0.875rem;
-  color: #666;
-  margin: 0;
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
 }
 
 .card-value {
   font-size: 1.5rem;
-  font-weight: 600;
-  color: #333;
-  margin: 0.5rem 0 0 0;
+  font-weight: 700;
+  color: var(--text-color);
 }
 
 .dashboard-grid {
@@ -301,27 +328,29 @@ export default {
 
 .dashboard-item {
   background: white;
-  border-radius: 8px;
+  border-radius: 20px;
   padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px var(--shadow-color);
 }
 
 .dashboard-item h3 {
-  margin: 0 0 1rem 0;
-  color: #333;
+  font-size: 1.125rem;
+  color: var(--text-color);
+  margin-bottom: 1.5rem;
+  font-weight: 600;
 }
 
+/* Gráfico de Presença */
 .grafico-presenca {
-  grid-column: 1 / -1;
+  grid-column: span 2;
 }
 
 .grafico-barras {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  height: 300px;
-  padding: 20px;
-  gap: 10px;
+  height: 200px;
+  padding: 1rem 0;
 }
 
 .barra-container {
@@ -329,72 +358,34 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  height: 100%;
+  gap: 0.5rem;
 }
 
 .barra {
   width: 40px;
-  background-color: #007bff;
-  border-radius: 4px;
+  background: var(--primary-color);
+  border-radius: 8px;
   position: relative;
   transition: height 0.3s ease;
-  min-height: 20px;
+  min-height: 4px;
 }
 
-.valor {
+.barra .valor {
   position: absolute;
-  top: -25px;
+  top: -24px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 0.875rem;
-  color: #666;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
 }
 
 .label {
-  margin-top: 10px;
-  font-size: 0.875rem;
-  color: #666;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
   text-transform: capitalize;
 }
 
-.table-container {
-  overflow-x: auto;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-th, td {
-  padding: 0.75rem;
-  text-align: left;
-  border-bottom: 1px solid #ddd;
-}
-
-th {
-  font-weight: 600;
-  color: #333;
-  background-color: #f8f9fa;
-}
-
-.tipo-badge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
-.tipo-badge.entrada {
-  background-color: #d4edda;
-  color: #155724;
-}
-
-.tipo-badge.saida {
-  background-color: #f8d7da;
-  color: #721c24;
-}
-
+/* Distribuição por Períodos */
 .periodos-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -402,31 +393,57 @@ th {
 }
 
 .periodo-card {
-  background: #f8f9fa;
+  background: rgba(var(--va-primary), 0.1);
+  border-radius: 16px;
   padding: 1rem;
-  border-radius: 8px;
   text-align: center;
 }
 
 .periodo-card h4 {
-  margin: 0;
-  color: #333;
   font-size: 1rem;
+  color: var(--text-color);
+  margin-bottom: 0.5rem;
 }
 
 .periodo-horario {
-  color: #666;
   font-size: 0.875rem;
-  margin: 0.5rem 0;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
 }
 
 .periodo-total {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   font-weight: 600;
-  color: #333;
-  margin: 0;
+  color: var(--primary-color);
 }
 
+/* Distribuição por Horário */
+.horarios-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 1rem;
+}
+
+.horario-card {
+  background: rgba(var(--va-primary), 0.1);
+  border-radius: 12px;
+  padding: 0.75rem;
+  text-align: center;
+}
+
+.horario-card h4 {
+  font-size: 0.875rem;
+  color: var(--text-color);
+  margin-bottom: 0.25rem;
+}
+
+.horario-total {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+/* Estatísticas do Período */
 .estatisticas-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -434,60 +451,106 @@ th {
 }
 
 .estatistica-card {
-  background: #f8f9fa;
+  background: rgba(var(--va-primary), 0.1);
+  border-radius: 16px;
   padding: 1rem;
-  border-radius: 8px;
   text-align: center;
 }
 
 .estatistica-card h4 {
-  margin: 0;
-  color: #666;
   font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
 }
 
 .estatistica-valor {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #333;
-  margin: 0.5rem 0 0 0;
-}
-
-.horarios-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-  gap: 1rem;
-}
-
-.horario-card {
-  background: #f8f9fa;
-  padding: 1rem;
-  border-radius: 8px;
-  text-align: center;
-}
-
-.horario-card h4 {
-  margin: 0;
-  color: #333;
-  font-size: 1rem;
-}
-
-.horario-total {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #333;
-  margin: 0.5rem 0 0 0;
+  color: var(--primary-color);
 }
 
-@media (max-width: 1024px) {
+/* Últimos Registros */
+.ultimos-registros {
+  grid-column: span 2;
+}
+
+.table-container {
+  overflow-x: auto;
+  margin: 0 -1.5rem;
+  padding: 0 1.5rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+th {
+  background: rgba(var(--va-primary), 0.1);
+  color: var(--text-color);
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-align: left;
+  padding: 1rem;
+}
+
+th:first-child {
+  border-top-left-radius: 12px;
+}
+
+th:last-child {
+  border-top-right-radius: 12px;
+}
+
+td {
+  padding: 1rem;
+  color: var(--text-color);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.875rem;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+.tipo-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.tipo-badge.entrada {
+  background-color: #E6F4EA;
+  color: #1E8E3E;
+}
+
+.tipo-badge.saida {
+  background-color: #FFF2F2;
+  color: #FF3B3B;
+}
+
+@media (max-width: 1200px) {
+  .dashboard-container {
+    padding: 1.5rem;
+  }
+
   .dashboard-grid {
     grid-template-columns: 1fr;
+  }
+
+  .grafico-presenca,
+  .ultimos-registros {
+    grid-column: span 1;
   }
 }
 
 @media (max-width: 768px) {
-  .cards-grid {
-    grid-template-columns: 1fr;
+  .dashboard-container {
+    padding: 1rem;
   }
 
   .header-section {
@@ -496,9 +559,46 @@ th {
     gap: 1rem;
   }
 
-  .periodos-grid,
+  .cards-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+
+  .card {
+    padding: 1rem;
+  }
+
+  .card-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.25rem;
+  }
+
+  .periodos-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-container {
+    padding: 0.75rem;
+  }
+
+  .cards-grid {
+    grid-template-columns: 1fr;
+  }
+
   .estatisticas-grid {
     grid-template-columns: 1fr;
+  }
+
+  .table-container {
+    margin: 0 -0.75rem;
+    padding: 0 0.75rem;
+  }
+
+  th, td {
+    padding: 0.75rem;
   }
 }
 </style> 

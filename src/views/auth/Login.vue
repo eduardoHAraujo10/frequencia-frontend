@@ -63,112 +63,109 @@
   </div>
 </template>
 
-<script>
-import axios from 'axios';
+<script setup>
+import { ref, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
-import { ref } from 'vue';
+import axios from 'axios';
+import { useAuthStore } from '../../stores/auth';
 
-export default {
-  name: 'Login',
-  setup() {
-    const router = useRouter();
+const router = useRouter();
+const authStore = useAuthStore();
 
-    const formData = ref({
-      email: '',
-      password: ''
-    });
+const formData = ref({
+  email: '',
+  password: ''
+});
 
-    const errors = ref({
-      email: '',
-      password: ''
-    });
+const errors = ref({
+  email: '',
+  password: ''
+});
 
-    const loading = ref(false);
-    const error = ref(null);
-    const showPassword = ref(false);
+const loading = ref(false);
+const error = ref(null);
+const showPassword = ref(false);
 
-    const validateField = (field) => {
-      errors.value[field] = '';
-      
-      switch (field) {
-        case 'email':
-          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-          if (!emailRegex.test(formData.value.email)) {
-            errors.value.email = 'Digite um e-mail válido';
-          }
-          break;
-        case 'password':
-          if (!formData.value.password) {
-            errors.value.password = 'A senha é obrigatória';
-          }
-          break;
-      }
-    };
+const validateEmail = () => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!formData.value.email) {
+    errors.value.email = 'O e-mail é obrigatório';
+    return false;
+  }
+  if (!emailRegex.test(formData.value.email)) {
+    errors.value.email = 'Digite um e-mail válido';
+    return false;
+  }
+  errors.value.email = '';
+  return true;
+};
 
-    const validateForm = () => {
-      ['email', 'password'].forEach(field => {
-        validateField(field);
+const validatePassword = () => {
+  if (!formData.value.password) {
+    errors.value.password = 'A senha é obrigatória';
+    return false;
+  }
+  errors.value.password = '';
+  return true;
+};
+
+const validateForm = () => {
+  const isEmailValid = validateEmail();
+  const isPasswordValid = validatePassword();
+  return isEmailValid && isPasswordValid;
+};
+
+const handleSubmit = async () => {
+  if (!validateForm()) return;
+
+  loading.value = true;
+  error.value = null;
+
+  // Criar um timeout de 10 segundos
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => {
+      reject(new Error('Tempo limite excedido. Verifique sua conexão e tente novamente.'));
+    }, 10000);
+  });
+
+  try {
+    // Competição entre a requisição e o timeout
+    const response = await Promise.race([
+      axios.post('http://localhost:8000/api/v1/auth/login', formData.value),
+      timeoutPromise
+    ]);
+
+    if (response.data.status === 'success') {
+      // Login usando a store de autenticação
+      await authStore.login({
+        token: response.data.data.token,
+        tipo: response.data.data.user.tipo,
+        nome: response.data.data.user.nome,
+        email: response.data.data.user.email
       });
-      return !Object.values(errors.value).some(error => error !== '');
-    };
 
-    const handleSubmit = async () => {
-      if (!validateForm()) return;
-      
-      loading.value = true;
-      error.value = null;
+      // Aguarda um tick para garantir que o estado foi atualizado
+      await nextTick();
 
-      // Criar um timeout de 10 segundos
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => {
-          reject(new Error('Tempo limite excedido. Verifique sua conexão e tente novamente.'));
-        }, 10000); // 10 segundos
+      // Redireciona baseado no tipo de usuário
+      const route = response.data.data.user.tipo === 'coordenador'
+        ? '/dashboard-coordenador'
+        : '/registro-ponto';
+
+      // Força uma atualização da rota
+      await router.replace(route);
+    } else {
+      error.value = response.data.message || 'Erro ao realizar login. Verifique suas credenciais.';
+    }
+  } catch (err) {
+    error.value = err.response?.data?.message || 'Erro ao realizar login. Verifique suas credenciais.';
+    if (err.response?.data?.errors) {
+      Object.entries(err.response.data.errors).forEach(([field, messages]) => {
+        errors.value[field] = messages[0];
       });
-
-      try {
-        // Competição entre a requisição e o timeout
-        const response = await Promise.race([
-          axios.post('http://localhost:8000/api/v1/auth/login', formData.value),
-          timeoutPromise
-        ]);
-        
-        if (response.data.status === 'success') {
-          // Salvar dados do usuário retornados pela API
-          localStorage.setItem('token', response.data.data.token);
-          localStorage.setItem('userRole', response.data.data.user.tipo);
-          localStorage.setItem('userName', response.data.data.user.nome);
-          localStorage.setItem('userEmail', response.data.data.user.email);
-          
-          // Redirecionar baseado no tipo de usuário retornado pela API
-          if (response.data.data.user.tipo === 'coordenador') {
-            router.push('/dashboard-coordenador');
-          } else {
-            router.push('/registro-ponto');
-          }
-        } else {
-          error.value = response.data.message || 'Erro ao realizar login. Verifique suas credenciais.';
-        }
-      } catch (err) {
-        error.value = err.response?.data?.message || 'Erro ao realizar login. Verifique suas credenciais.';
-        if (err.response?.data?.errors) {
-          Object.entries(err.response.data.errors).forEach(([field, messages]) => {
-            errors.value[field] = messages[0];
-          });
-        }
-      } finally {
-        loading.value = false;
-      }
-    };
-
-    return {
-      formData,
-      errors,
-      loading,
-      error,
-      showPassword,
-      validateField,
-      handleSubmit
-    };
+    }
+  } finally {
+    loading.value = false;
   }
 };
 </script>
@@ -176,26 +173,54 @@ export default {
 <style scoped>
 .login-container {
   min-height: 100vh;
+  min-width: 100vw;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 2rem;
-  background-color: #f5f5f5;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow-y: auto;
 }
 
 .login-card {
-  background: white;
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.95);
+  padding: 2.5rem;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
+  backdrop-filter: blur(10px);
+  transform: translateY(0);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.login-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
 }
 
 h2 {
-  color: #333;
+  color: #1a237e;
   margin-bottom: 2rem;
   text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.success-message {
+  background-color: #4caf50;
+  color: white;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  animation: slideDown 0.5s ease;
 }
 
 .login-form {
@@ -212,71 +237,111 @@ h2 {
 
 label {
   font-weight: 600;
-  color: #444;
-}
-
-input {
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-}
-
-input:focus {
-  outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
-}
-
-.input-error {
-  border-color: #dc3545;
-}
-
-.error-text {
-  color: #dc3545;
-  font-size: 0.875rem;
+  color: #333;
+  font-size: 0.95rem;
+  margin-bottom: 0.25rem;
 }
 
 .password-input {
   position: relative;
   display: flex;
   align-items: center;
+  width: 100%;
+}
+
+.password-input input {
+  width: 100%;
+  padding-right: 2.5rem; /* Espaço para o ícone */
 }
 
 .toggle-password {
   position: absolute;
-  right: 0.75rem;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
   background: none;
   border: none;
   cursor: pointer;
   padding: 0;
-  font-size: 1.25rem;
+  color: #666;
+  transition: color 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.toggle-password:hover {
+  color: #333;
+}
+
+input {
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background-color: #f8f9fa;
+}
+
+input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+  background-color: #fff;
+}
+
+.input-error {
+  border-color: #ef5350;
+  background-color: #fff8f8;
+}
+
+.error-text {
+  color: #ef5350;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.error-text::before {
+  content: "⚠";
 }
 
 button[type="submit"] {
-  background-color: #007bff;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   padding: 1rem;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 button[type="submit"]:hover:not(:disabled) {
-  background-color: #0056b3;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+button[type="submit"]:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 button[type="submit"]:disabled {
-  background-color: #ccc;
+  background: linear-gradient(135deg, #ccc 0%, #999 100%);
   cursor: not-allowed;
+  transform: none;
 }
 
 .spinner {
@@ -293,38 +358,96 @@ button[type="submit"]:disabled {
   100% { transform: rotate(360deg); }
 }
 
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .error-message {
-  color: #dc3545;
+  color: #fff;
   text-align: center;
   margin-top: 1rem;
-  padding: 0.5rem;
-  background-color: #ffe6e6;
-  border-radius: 4px;
+  padding: 0.75rem;
+  background: linear-gradient(135deg, #ef5350 0%, #e53935 100%);
+  border-radius: 8px;
+  animation: slideDown 0.5s ease;
+  font-weight: 500;
 }
 
 .register-link {
   text-align: center;
-  margin-top: 1rem;
+  margin-top: 1.5rem;
   color: #666;
+  font-size: 0.95rem;
 }
 
 .register-link a {
-  color: #007bff;
+  color: #667eea;
   text-decoration: none;
   font-weight: 600;
+  transition: all 0.3s ease;
+  position: relative;
 }
 
-.register-link a:hover {
-  text-decoration: underline;
+.register-link a::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  bottom: -2px;
+  left: 0;
+  background-color: #667eea;
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.register-link a:hover::after {
+  transform: scaleX(1);
 }
 
 @media (max-width: 480px) {
-  .login-card {
-    padding: 1.5rem;
+  .login-container {
+    padding: 1rem;
   }
 
-  input, button {
+  .login-card {
+    padding: 1.5rem;
+    border-radius: 12px;
+  }
+
+  h2 {
+    font-size: 1.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  input {
     padding: 0.875rem;
   }
+
+  button[type="submit"] {
+    padding: 0.875rem;
+  }
+}
+
+/* Adiciona animação de entrada */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login-card {
+  animation: fadeIn 0.6s ease-out;
 }
 </style> 

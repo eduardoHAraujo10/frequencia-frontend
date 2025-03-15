@@ -8,58 +8,57 @@
     <div class="filtros-section">
       <h3>Filtros</h3>
       <div class="filtros-grid">
-        <!-- Período -->
-        <div class="filtro-grupo">
-        <label>Período:</label>
-        <div class="date-inputs">
-          <div class="date-input">
-            <label>De:</label>
-            <input 
-              type="date" 
-                v-model="filtros.dataInicio"
-              @change="gerarRelatorio"
-            />
-          </div>
-          <div class="date-input">
-            <label>Até:</label>
-            <input 
-              type="date" 
-                v-model="filtros.dataFim"
-              @change="gerarRelatorio"
-            />
+        <div class="filtro-grupo periodo">
+          <label>Período</label>
+          <div class="date-inputs">
+            <div class="date-input">
+              <label>Data Inicial</label>
+              <input type="date" v-model="filtros.dataInicial" />
+            </div>
+            <div class="date-input">
+              <label>Data Final</label>
+              <input type="date" v-model="filtros.dataFinal" />
             </div>
           </div>
         </div>
 
-        <!-- Busca por Nome/Matrícula -->
-        <div class="filtro-grupo">
-          <label>Buscar por Nome:</label>
-          <input 
-            type="text" 
-            v-model="filtros.nome"
-            placeholder="Digite o nome do aluno"
-            @input="gerarRelatorio"
-          />
-        </div>
+        <div class="filtros-busca">
+          <div class="filtro-grupo">
+            <label>Nome do Aluno</label>
+            <div class="input-icon">
+              <i class="fas fa-user"></i>
+              <input 
+                type="text" 
+                v-model="filtros.nomeAluno" 
+                placeholder="Digite o nome do aluno"
+              />
+            </div>
+          </div>
 
-        <div class="filtro-grupo">
-          <label>Buscar por Matrícula:</label>
-          <input 
-            type="text" 
-            v-model="filtros.matricula"
-            placeholder="Digite a matrícula"
-            @input="gerarRelatorio"
-          />
-        </div>
+          <div class="filtro-grupo">
+            <label>Matrícula</label>
+            <div class="input-icon">
+              <i class="fas fa-id-card"></i>
+              <input 
+                type="text" 
+                v-model="filtros.matricula" 
+                placeholder="Digite a matrícula"
+              />
+            </div>
+          </div>
 
-        <!-- Status -->
-        <div class="filtro-grupo">
-          <label>Status:</label>
-          <select v-model="filtros.status" @change="gerarRelatorio">
-            <option value="">Todos</option>
-            <option value="ativo">Ativos</option>
-            <option value="inativo">Inativos</option>
-          </select>
+          <div class="filtro-grupo">
+            <label>Status</label>
+            <div class="select-icon">
+              <select v-model="filtros.status">
+                <option value="">Todos</option>
+                <option value="presente">Presente</option>
+                <option value="ausente">Ausente</option>
+                <option value="justificado">Justificado</option>
+              </select>
+              <i class="fas fa-chevron-down"></i>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -169,9 +168,9 @@ export default {
     
     // Filtros
     const filtros = ref({
-      dataInicio: '',
-      dataFim: '',
-      nome: '',
+      dataInicial: '',
+      dataFinal: '',
+      nomeAluno: '',
       matricula: '',
       status: ''
     });
@@ -191,8 +190,8 @@ export default {
       try {
         const response = await axios.get('http://localhost:8000/api/v1/registros/resumo', {
           params: {
-            dataInicio: filtros.value.dataInicio,
-            dataFim: filtros.value.dataFim
+            dataInicio: filtros.value.dataInicial,
+            dataFim: filtros.value.dataFinal
           },
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -228,8 +227,8 @@ export default {
       try {
         const response = await axios.get('http://localhost:8000/api/v1/gerenciador/presencas', {
           params: {
-            dataInicio: filtros.value.dataInicio,
-            dataFim: filtros.value.dataFim
+            dataInicio: filtros.value.dataInicial,
+            dataFim: filtros.value.dataFinal
           },
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -264,12 +263,14 @@ export default {
           
           // Filtrar alunos conforme os filtros
           const alunosFiltrados = alunos.filter(aluno => {
-            const nomeMatch = !filtros.value.nome || 
-              aluno.nome.toLowerCase().includes(filtros.value.nome.toLowerCase());
+            const nomeMatch = !filtros.value.nomeAluno || 
+              aluno.nome.toLowerCase().includes(filtros.value.nomeAluno.toLowerCase());
             const matriculaMatch = !filtros.value.matricula || 
               aluno.matricula.includes(filtros.value.matricula);
             const statusMatch = !filtros.value.status || 
-              (filtros.value.status === 'ativo' ? aluno.ativo : !aluno.ativo);
+              (filtros.value.status === 'presente' ? aluno.presente : 
+                (filtros.value.status === 'ausente' ? !aluno.presente : true) && 
+                (filtros.value.status === 'justificado' ? aluno.justificado : true));
             
             return nomeMatch && matriculaMatch && statusMatch;
           });
@@ -282,8 +283,8 @@ export default {
                   `http://localhost:8000/api/v1/gerenciador/alunos/${aluno.id}/frequencia`,
           {
             params: {
-                      dataInicio: filtros.value.dataInicio,
-                      dataFim: filtros.value.dataFim
+                      dataInicio: filtros.value.dataInicial,
+                      dataFim: filtros.value.dataFinal
             },
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -357,9 +358,9 @@ export default {
           'http://localhost:8000/api/v1/gerenciador/exportar-registros',
           {
             params: {
-              dataInicio: filtros.value.dataInicio,
-              dataFim: filtros.value.dataFim,
-              nome: filtros.value.nome || undefined,
+              dataInicio: filtros.value.dataInicial,
+              dataFim: filtros.value.dataFinal,
+              nome: filtros.value.nomeAluno || undefined,
               matricula: filtros.value.matricula || undefined,
               status: filtros.value.status || undefined,
               formato: 'pdf'
@@ -395,8 +396,8 @@ export default {
       // Definir data inicial como primeiro dia do mês atual
       const hoje = new Date();
       const primeiroDiaMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-      filtros.value.dataInicio = primeiroDiaMes.toISOString().split('T')[0];
-      filtros.value.dataFim = hoje.toISOString().split('T')[0];
+      filtros.value.dataInicial = primeiroDiaMes.toISOString().split('T')[0];
+      filtros.value.dataFinal = hoje.toISOString().split('T')[0];
       
       // Carregar relatório inicial
       gerarRelatorio();
@@ -420,31 +421,43 @@ export default {
 <style scoped>
 .relatorios-container {
   padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .header-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   margin-bottom: 2rem;
+}
+
+.header-actions h2 {
+  color: #1a237e;
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin: 0;
 }
 
 .filtros-section {
   background: white;
-  border-radius: 8px;
+  border-radius: 12px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 1.5rem;
   margin-bottom: 2rem;
 }
 
 .filtros-section h3 {
-  margin: 0 0 1rem 0;
-  color: #333;
+  color: #1a237e;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 1.5rem 0;
 }
 
 .filtros-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 1.5rem;
 }
 
@@ -456,87 +469,160 @@ export default {
 
 .filtro-grupo label {
   font-weight: 500;
-  color: #666;
+  color: #2d3748;
+  font-size: 0.95rem;
 }
 
-.filtro-grupo input,
-.filtro-grupo select {
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
-  width: 100%;
+.filtro-grupo.periodo {
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 1.5rem;
 }
 
 .date-inputs {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 1rem;
 }
 
 .date-input {
-  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.date-input label {
+  color: #718096;
+  font-size: 0.875rem;
+}
+
+.filtros-busca {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.input-icon, .select-icon {
+  position: relative;
+}
+
+.input-icon i, .select-icon i {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #a0aec0;
+  pointer-events: none;
+}
+
+.select-icon i {
+  left: auto;
+  right: 1rem;
+}
+
+.filtro-grupo input,
+.filtro-grupo select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  padding-left: 2.5rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  background-color: #f8fafc;
+  transition: all 0.3s ease;
+  color: #2d3748;
+}
+
+.filtro-grupo select {
+  padding-right: 2.5rem;
+  padding-left: 1rem;
+  appearance: none;
+  cursor: pointer;
+}
+
+.filtro-grupo input:focus,
+.filtro-grupo select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  background-color: white;
+}
+
+.filtro-grupo input::placeholder {
+  color: #a0aec0;
 }
 
 .resumo-section {
   background: white;
-  border-radius: 8px;
+  border-radius: 12px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 1.5rem;
   margin-bottom: 2rem;
 }
 
 .resumo-section h3 {
-  margin: 0 0 1rem 0;
-  color: #333;
+  color: #1a237e;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 1.5rem 0;
 }
 
 .summary-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
 }
 
 .summary-card {
-  background: #f8f9fa;
+  background: #f8fafc;
   padding: 1.5rem;
   border-radius: 8px;
   display: flex;
   align-items: center;
   gap: 1rem;
+  transition: transform 0.3s ease;
+}
+
+.summary-card:hover {
+  transform: translateY(-2px);
 }
 
 .summary-card i {
   font-size: 2rem;
-  color: #007bff;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .summary-info {
   display: flex;
   flex-direction: column;
+  gap: 0.25rem;
 }
 
 .summary-value {
+  color: #2d3748;
   font-size: 1.5rem;
   font-weight: 600;
-  color: #333;
 }
 
 .summary-label {
+  color: #718096;
   font-size: 0.875rem;
-  color: #666;
 }
 
 .tabela-section {
   background: white;
-  border-radius: 8px;
+  border-radius: 12px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 1.5rem;
   margin-bottom: 2rem;
 }
 
 .tabela-section h3 {
-  margin: 0 0 1rem 0;
-  color: #333;
+  color: #1a237e;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 1.5rem 0;
 }
 
 .registros-table {
@@ -545,64 +631,76 @@ export default {
 
 table {
   width: 100%;
-  border-collapse: collapse;
-}
-
-th, td {
-  padding: 1rem;
-  text-align: left;
-  border-bottom: 1px solid #ddd;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 th {
-  background-color: #f8f9fa;
+  background-color: #f8fafc;
+  color: #1a237e;
   font-weight: 600;
-  color: #333;
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 2px solid #edf2f7;
   white-space: nowrap;
 }
 
+td {
+  padding: 1rem;
+  border-bottom: 1px solid #edf2f7;
+  color: #2d3748;
+}
+
+tr:hover {
+  background-color: #f8fafc;
+}
+
 .status-badge {
-  padding: 0.25rem 0.75rem;
+  padding: 0.5rem 1rem;
   border-radius: 20px;
   font-size: 0.875rem;
   font-weight: 500;
+  display: inline-flex;
+  align-items: center;
 }
 
 .status-badge.ativo {
-  background-color: #d4edda;
-  color: #155724;
+  background-color: #c6f6d5;
+  color: #22543d;
 }
 
 .status-badge.inativo {
-  background-color: #f8d7da;
-  color: #721c24;
+  background-color: #fed7d7;
+  color: #822727;
 }
 
 .export-actions {
   display: flex;
-  gap: 1rem;
   justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
 }
 
 .export-button {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 4px;
-  font-weight: 600;
-  cursor: pointer;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  transition: background-color 0.3s;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .export-button.pdf {
-  background-color: #dc3545;
+  background: linear-gradient(135deg, #f56565 0%, #c53030 100%);
   color: white;
 }
 
 .export-button.pdf:hover {
-  background-color: #c82333;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 101, 101, 0.25);
 }
 
 .loading-indicator {
@@ -610,24 +708,25 @@ th {
   flex-direction: column;
   align-items: center;
   gap: 1rem;
-  padding: 2rem;
+  padding: 3rem;
 }
 
 .spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #007bff;
+  border: 3px solid #e2e8f0;
+  border-top: 3px solid #667eea;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
 
 .error-message {
+  background-color: #fed7d7;
+  color: #822727;
   padding: 1rem;
-  background-color: #f8d7da;
-  color: #721c24;
-  border-radius: 4px;
+  border-radius: 8px;
   text-align: center;
+  margin: 1rem 0;
 }
 
 @keyframes spin {
@@ -636,16 +735,36 @@ th {
 }
 
 @media (max-width: 768px) {
+  .relatorios-container {
+    padding: 1rem;
+  }
+
+  .header-actions,
+  .filtros-section,
+  .resumo-section,
+  .tabela-section {
+    padding: 1rem;
+  }
+
   .filtros-grid {
-    grid-template-columns: 1fr;
+    gap: 1rem;
   }
 
   .date-inputs {
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
 
   .summary-cards {
     grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .table-container {
+    margin: 0 -1rem;
+  }
+
+  td, th {
+    padding: 0.75rem;
   }
 
   .export-actions {
@@ -656,5 +775,21 @@ th {
     width: 100%;
     justify-content: center;
   }
+}
+
+/* Animações */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.relatorios-container {
+  animation: fadeIn 0.5s ease-out;
 }
 </style> 

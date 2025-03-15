@@ -9,39 +9,50 @@
     </div>
 
     <div class="filtros-section">
-      <div class="filtro-grupo">
-        <label>Status:</label>
-        <select v-model="filtroStatus" class="filtro-select">
-          <option value="todos">Todos</option>
-          <option value="pendente">Pendentes</option>
-          <option value="aprovado">Aprovados</option>
-          <option value="rejeitado">Rejeitados</option>
-        </select>
-      </div>
+      <div class="filtros-grid">
+        <div class="filtro-grupo">
+          <label>
+            <i class="fas fa-filter"></i>
+            Status:
+          </label>
+          <select v-model="filtroStatus" class="filtro-select">
+            <option value="todos">Todos</option>
+            <option value="pendente">Pendentes</option>
+            <option value="aprovado">Aprovados</option>
+            <option value="rejeitado">Rejeitados</option>
+          </select>
+        </div>
 
-      <div class="filtro-grupo">
-        <label>Tipo:</label>
-        <select v-model="filtroTipo" class="filtro-select">
-          <option value="todos">Todos</option>
-          <option value="alerta">Alertas de Esquecimento</option>
-          <option value="ajuste">Ajustes de Horário</option>
-        </select>
-      </div>
+        <div class="filtro-grupo">
+          <label>
+            <i class="fas fa-tasks"></i>
+            Tipo:
+          </label>
+          <select v-model="filtroTipo" class="filtro-select">
+            <option value="todos">Todos</option>
+            <option value="alerta">Alertas de Esquecimento</option>
+            <option value="ajuste">Ajustes de Horário</option>
+          </select>
+        </div>
 
-      <div class="filtro-grupo">
-        <label>Período:</label>
-        <div class="periodo-inputs">
-          <input 
-            type="date" 
-            v-model="filtroDataInicio" 
-            class="filtro-input"
-          >
-          <span>até</span>
-          <input 
-            type="date" 
-            v-model="filtroDataFim" 
-            class="filtro-input"
-          >
+        <div class="filtro-grupo periodo-grupo">
+          <label>
+            <i class="fas fa-calendar-alt"></i>
+            Período:
+          </label>
+          <div class="periodo-inputs">
+            <input 
+              type="date" 
+              v-model="filtroDataInicio" 
+              class="filtro-input"
+            >
+            <span class="periodo-separator">até</span>
+            <input 
+              type="date" 
+              v-model="filtroDataFim" 
+              class="filtro-input"
+            >
+          </div>
         </div>
       </div>
     </div>
@@ -62,11 +73,13 @@
 
     <div v-else class="alertas-grid">
       <div v-for="item in solicitacoesFiltradas" :key="item.id" class="alerta-card">
-        <div class="alerta-header">
+        <div class="alerta-header" :class="item.status">
           <div class="tipo-badge" :class="item.tipoSolicitacao">
+            <i :class="item.tipoSolicitacao === 'alerta' ? 'fas fa-exclamation-circle' : 'fas fa-clock'"></i>
             {{ item.tipoSolicitacao === 'alerta' ? 'Alerta de Esquecimento' : 'Ajuste de Horário' }}
           </div>
           <div class="alerta-status" :class="item.status">
+            <i :class="getStatusIcon(item.status)"></i>
             {{ traduzirStatus(item.status) }}
           </div>
         </div>
@@ -295,6 +308,14 @@ export default {
       };
       return traducoes[status] || status;
     },
+    getStatusIcon(status) {
+      const icons = {
+        'pendente': 'fas fa-clock',
+        'aprovado': 'fas fa-check-circle',
+        'rejeitado': 'fas fa-times-circle'
+      };
+      return icons[status] || 'fas fa-question-circle';
+    },
     mudarPagina(pagina) {
       if (pagina >= 1 && pagina <= this.totalPaginas) {
         this.paginaAtual = pagina;
@@ -323,219 +344,383 @@ export default {
 
 <style scoped>
 .historico-alertas-container {
-  padding: 20px;
+  padding: 2rem;
   max-width: 1200px;
   margin: 0 auto;
+  animation: fadeIn 0.3s ease;
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
+  margin-bottom: 2rem;
+  background: white;
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
 .page-header h2 {
-  color: #2c3e50;
+  color: #2d3748;
   margin: 0;
+  font-size: 1.8rem;
+  font-weight: 600;
 }
 
 .btn-voltar {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
-  background-color: #f0f0f0;
-  border-radius: 4px;
+  padding: 0.75rem 1.25rem;
+  background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+  border-radius: 8px;
   text-decoration: none;
-  color: #333;
-  transition: background-color 0.3s;
+  color: white;
+  font-weight: 500;
+  transition: all 0.3s ease;
 }
 
 .btn-voltar:hover {
-  background-color: #e0e0e0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(45, 55, 72, 0.2);
 }
 
 .filtros-section {
-  display: flex;
-  gap: 20px;
-  margin-bottom: 30px;
-  flex-wrap: wrap;
+  background: white;
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  margin-bottom: 2rem;
+}
+
+.filtros-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
 }
 
 .filtro-grupo {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0.75rem;
 }
 
 .filtro-grupo label {
-  color: #495057;
-  font-weight: 500;
-  min-width: 80px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: #4a5568;
+  font-size: 0.95rem;
+}
+
+.filtro-grupo label i {
+  color: #4299e1;
 }
 
 .filtro-select,
 .filtro-input {
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  min-width: 150px;
+  padding: 0.75rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: white;
+  width: 100%;
+}
+
+.filtro-select:focus,
+.filtro-input:focus {
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+  outline: none;
+}
+
+.periodo-grupo {
+  grid-column: 1 / -1;
 }
 
 .periodo-inputs {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 1rem;
   align-items: center;
-  gap: 10px;
+}
+
+.periodo-separator {
+  color: #4a5568;
+  font-weight: 500;
 }
 
 .alertas-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
-  margin-bottom: 30px;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 1.5rem;
+  animation: slideUp 0.4s ease;
 }
 
 .alerta-card {
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+}
+
+.alerta-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
 .alerta-header {
-  display: flex;
-  justify-content: space-between;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
   align-items: center;
 }
 
+.alerta-header.pendente {
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+}
+
+.alerta-header.aprovado {
+  background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+}
+
+.alerta-header.rejeitado {
+  background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+}
+
 .tipo-badge {
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.9em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.tipo-badge i {
+  font-size: 1.1rem;
 }
 
 .tipo-badge.alerta {
-  background-color: #fef3c7;
+  background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%);
   color: #92400e;
 }
 
 .tipo-badge.ajuste {
-  background-color: #e0e7ff;
+  background: linear-gradient(135deg, #e0e7ff 0%, #818cf8 100%);
   color: #3730a3;
 }
 
 .alerta-status {
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.9em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.alerta-status i {
+  font-size: 1.1rem;
 }
 
 .alerta-status.pendente {
-  background-color: #f3f4f6;
+  background: #f3f4f6;
   color: #374151;
 }
 
 .alerta-status.aprovado {
-  background-color: #d1fae5;
+  background: #d1fae5;
   color: #065f46;
 }
 
 .alerta-status.rejeitado {
-  background-color: #fee2e2;
+  background: #fee2e2;
   color: #991b1b;
 }
 
 .alerta-content {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  padding: 1.5rem;
+  flex: 1;
 }
 
 .info-row {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.info-row:last-child {
+  margin-bottom: 0;
 }
 
 .info-row .label {
-  font-weight: 500;
+  font-size: 0.9rem;
   color: #6b7280;
+  font-weight: 500;
 }
 
 .info-row .value {
-  color: #111827;
+  font-size: 1.1rem;
+  color: #1f2937;
+  font-weight: 600;
 }
 
 .justificativa {
   margin: 0;
-  color: #374151;
-  font-size: 0.95em;
-  line-height: 1.5;
+  color: #4b5563;
+  line-height: 1.6;
+  font-size: 0.95rem;
+  background: #f9fafb;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
 }
 
 .alerta-feedback {
-  background-color: #f9fafb;
-  padding: 12px;
-  border-radius: 4px;
-  font-size: 0.95em;
+  background: #f9fafb;
+  padding: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.alerta-feedback strong {
+  display: block;
+  margin-bottom: 0.75rem;
+  color: #374151;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.alerta-feedback p {
+  margin: 0;
+  color: #4b5563;
+  line-height: 1.6;
+  font-size: 0.95rem;
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
 }
 
 .feedback-data {
   display: block;
-  margin-top: 8px;
+  margin-top: 0.75rem;
   color: #6b7280;
-  font-size: 0.9em;
-}
-
-.paginacao {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 16px;
-  margin-top: 30px;
-}
-
-.page-button {
-  padding: 8px 16px;
-  border: none;
-  background-color: #f3f4f6;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.page-button:hover:not(:disabled) {
-  background-color: #e5e7eb;
-}
-
-.page-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.page-info {
-  color: #4b5563;
+  font-size: 0.85rem;
+  font-style: italic;
 }
 
 .loading-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
-  padding: 40px;
+  gap: 1rem;
+  padding: 3rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
 .spinner {
-  border: 4px solid #f3f4f6;
-  border-top: 4px solid #3b82f6;
-  border-radius: 50%;
   width: 40px;
   height: 40px;
+  border: 4px solid #e2e8f0;
+  border-top: 4px solid #4299e1;
+  border-radius: 50%;
   animation: spin 1s linear infinite;
+}
+
+.error-message {
+  text-align: center;
+  color: #e53e3e;
+  padding: 1.5rem;
+  background: #fff5f5;
+  border-radius: 12px;
+  border: 1px solid #feb2b2;
+  margin: 2rem 0;
+}
+
+.no-data {
+  text-align: center;
+  padding: 3rem;
+  color: #6b7280;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.no-data i {
+  font-size: 3rem;
+  color: #9ca3af;
+  margin-bottom: 1rem;
+}
+
+.paginacao {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.page-button {
+  padding: 0.75rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #4299e1;
+}
+
+.page-button:hover:not(:disabled) {
+  background: #4299e1;
+  border-color: #4299e1;
+  color: white;
+  transform: translateY(-2px);
+}
+
+.page-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #f7fafc;
+}
+
+.page-info {
+  color: #4a5568;
+  font-weight: 500;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes spin {
@@ -543,27 +728,49 @@ export default {
   100% { transform: rotate(360deg); }
 }
 
-.error-message {
-  text-align: center;
-  color: #dc2626;
-  padding: 20px;
-  background-color: #fee2e2;
-  border-radius: 8px;
-  margin: 20px 0;
-}
+@media (max-width: 768px) {
+  .historico-alertas-container {
+    padding: 1rem;
+  }
 
-.no-data {
-  text-align: center;
-  padding: 40px;
-  color: #6b7280;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-}
+  .page-header {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+    padding: 1.25rem;
+  }
 
-.no-data i {
-  font-size: 2em;
-  opacity: 0.5;
+  .btn-voltar {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .filtros-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .periodo-inputs {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .periodo-separator {
+    text-align: center;
+  }
+
+  .alertas-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .alerta-header {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .tipo-badge,
+  .alerta-status {
+    justify-content: center;
+  }
 }
 </style> 

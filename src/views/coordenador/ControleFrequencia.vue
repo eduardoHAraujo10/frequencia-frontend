@@ -287,19 +287,25 @@ export default {
 }
 
 .frequencia-header {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   margin-bottom: 2rem;
 }
 
 .frequencia-header h2 {
-  margin-bottom: 1rem;
-  color: #333;
+  color: #1a237e;
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin: 0 0 1.5rem 0;
 }
 
 .filtros {
-  display: flex;
-  gap: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
   align-items: flex-end;
-  flex-wrap: wrap;
 }
 
 .periodo-select, .date-input {
@@ -309,60 +315,72 @@ export default {
 }
 
 label {
-  font-weight: 600;
-  color: #444;
+  font-weight: 500;
+  color: #2d3748;
+  font-size: 0.95rem;
 }
 
 select, input[type="date"] {
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
   font-size: 1rem;
-  min-width: 200px;
+  background-color: #f8fafc;
+  transition: all 0.3s ease;
+  color: #2d3748;
+}
+
+select:focus, input[type="date"]:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  background-color: white;
 }
 
 .filter-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
   transition: all 0.3s ease;
+  height: 45px;
+  justify-content: center;
 }
 
 .filter-button:hover {
-  background-color: #0056b3;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
 }
 
-.filter-button:active {
-  transform: translateY(0);
+.resumo-geral {
+  margin-bottom: 2rem;
 }
 
 .resumo-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
-  margin-bottom: 2rem;
-  background: white;
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  gap: 1.5rem;
 }
 
 .resumo-item {
-  background: #f8f9fa;
+  background: #f8fafc;
   padding: 1.5rem;
   border-radius: 8px;
   display: flex;
   align-items: center;
   gap: 1rem;
-  transition: transform 0.2s ease;
+  transition: transform 0.3s ease;
 }
 
 .resumo-item:hover {
@@ -371,124 +389,139 @@ select, input[type="date"] {
 
 .resumo-item i {
   font-size: 2rem;
-  color: #007bff;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .resumo-info {
   display: flex;
   flex-direction: column;
+  gap: 0.25rem;
 }
 
 .label {
-  color: #666;
+  color: #718096;
   font-size: 0.875rem;
 }
 
 .value {
+  color: #2d3748;
   font-size: 1.5rem;
-  font-weight: bold;
-  color: #333;
+  font-weight: 600;
 }
 
 .frequencia-table {
   background: white;
-  border-radius: 8px;
+  border-radius: 12px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  margin-bottom: 2rem;
 }
 
 table {
   width: 100%;
-  border-collapse: collapse;
-}
-
-th, td {
-  padding: 1rem;
-  text-align: left;
-  border-bottom: 1px solid #eee;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 th {
-  background-color: #f8f9fa;
+  background-color: #f8fafc;
+  color: #1a237e;
   font-weight: 600;
-  color: #444;
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 2px solid #edf2f7;
+  white-space: nowrap;
+}
+
+td {
+  padding: 1rem;
+  border-bottom: 1px solid #edf2f7;
+  color: #2d3748;
 }
 
 tr:hover {
-  background-color: #f8f9fa;
+  background-color: #f8fafc;
 }
 
 .frequencia-badge {
-  padding: 0.25rem 0.75rem;
+  padding: 0.5rem 1rem;
   border-radius: 20px;
+  font-size: 0.875rem;
   font-weight: 500;
+  display: inline-flex;
+  align-items: center;
 }
 
 .frequencia-badge.alta {
-  background-color: #d4edda;
-  color: #155724;
+  background-color: #c6f6d5;
+  color: #22543d;
 }
 
 .frequencia-badge.media {
-  background-color: #fff3cd;
-  color: #856404;
+  background-color: #feebc8;
+  color: #744210;
 }
 
 .frequencia-badge.baixa {
-  background-color: #f8d7da;
-  color: #721c24;
+  background-color: #fed7d7;
+  color: #822727;
 }
 
 .action-button {
+  background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  cursor: pointer;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.875rem;
   transition: all 0.3s ease;
 }
 
 .action-button:hover {
-  background-color: #0056b3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(66, 153, 225, 0.2);
 }
 
 .loading-indicator {
-  text-align: center;
-  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 3rem;
 }
 
 .spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #007bff;
+  border: 3px solid #e2e8f0;
+  border-top: 3px solid #667eea;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin: 0 auto 1rem;
 }
 
 .error-message {
-  text-align: center;
-  color: #dc3545;
+  background-color: #fed7d7;
+  color: #822727;
   padding: 1rem;
-  background-color: #f8d7da;
-  border-radius: 4px;
+  border-radius: 8px;
+  text-align: center;
+  margin: 1rem 0;
 }
 
 .no-data {
   text-align: center;
   padding: 3rem;
-  color: #666;
+  color: #718096;
 }
 
 .no-data i {
   font-size: 3rem;
+  color: #a0aec0;
   margin-bottom: 1rem;
 }
 
@@ -501,18 +534,18 @@ tr:hover {
 }
 
 .page-button {
-  padding: 0.5rem 1rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
   background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  color: #2d3748;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .page-button:hover:not(:disabled) {
-  background: #f8f9fa;
-  border-color: #007bff;
-  color: #007bff;
+  border-color: #667eea;
+  color: #667eea;
 }
 
 .page-button:disabled {
@@ -521,8 +554,8 @@ tr:hover {
 }
 
 .page-info {
+  color: #718096;
   font-size: 0.875rem;
-  color: #666;
 }
 
 @keyframes spin {
@@ -535,27 +568,50 @@ tr:hover {
     padding: 1rem;
   }
 
-  .filtros {
-    flex-direction: column;
+  .frequencia-header {
+    padding: 1rem;
   }
 
-  .date-range {
-    flex-direction: column;
+  .filtros {
+    grid-template-columns: 1fr;
     gap: 1rem;
   }
 
-  select, input[type="date"] {
-    min-width: 100%;
+  .filter-button {
+    width: 100%;
   }
 
-  table {
-    display: block;
-    overflow-x: auto;
-    white-space: nowrap;
+  .resumo-card {
+    grid-template-columns: 1fr;
+    gap: 1rem;
   }
 
-  th, td {
+  .table-container {
+    margin: 0 -1rem;
+  }
+
+  td, th {
     padding: 0.75rem;
   }
+
+  .action-button {
+    padding: 0.5rem;
+  }
+}
+
+/* Animações */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.frequencia-container {
+  animation: fadeIn 0.5s ease-out;
 }
 </style> 

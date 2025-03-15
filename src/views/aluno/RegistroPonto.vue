@@ -975,182 +975,180 @@ export default {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  animation: fadeIn 0.3s ease;
 }
 
 .modal-content {
-  background-color: white;
+  background: white;
   padding: 2rem;
-  border-radius: 8px;
+  border-radius: 24px;
   width: 90%;
   max-width: 500px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .modal-content h3 {
-  margin-top: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-color);
   margin-bottom: 1.5rem;
-  color: #333;
+  letter-spacing: -0.02em;
 }
 
 .form-group {
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .form-group label {
   display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
   margin-bottom: 0.5rem;
-  color: #555;
 }
 
 .form-control {
   width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
   font-size: 1rem;
+  transition: all 0.3s ease;
+  background: #f8f9fa;
 }
 
 .form-control:focus {
   outline: none;
-  border-color: #4CAF50;
-  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+  border-color: var(--primary-color);
+  background: white;
+  box-shadow: 0 0 0 4px rgba(67, 24, 255, 0.1);
 }
 
 textarea.form-control {
+  min-height: 120px;
   resize: vertical;
-  min-height: 100px;
 }
 
 .modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
-  margin-top: 1.5rem;
+  margin-top: 2rem;
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  min-width: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
 .btn-primary {
-  background-color: #4CAF50;
+  background: linear-gradient(135deg, var(--primary-color) 0%, #868CFF 100%);
   color: white;
   border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1rem;
-  min-width: 100px;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: #45a049;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(67, 24, 255, 0.2);
 }
 
 .btn-primary:disabled {
-  background-color: #cccccc;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
 .btn-secondary {
-  background-color: #f5f5f5;
-  color: #333;
-  border: 1px solid #ddd;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1rem;
-  min-width: 100px;
+  background: white;
+  color: var(--text-color);
+  border: 2px solid #e0e0e0;
 }
 
 .btn-secondary:hover {
-  background-color: #e9e9e9;
-}
-
-.spinner {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: #fff;
-  animation: spin 1s ease-in-out infinite;
-  margin-right: 0.5rem;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
+  background: #f8f9fa;
+  border-color: #d0d0d0;
 }
 
 .registro-atual {
-  background-color: #f8f9fa;
-  padding: 0.75rem;
-  border-radius: 4px;
+  background: linear-gradient(135deg, rgba(67, 24, 255, 0.05) 0%, rgba(134, 140, 255, 0.05) 100%);
+  padding: 1rem;
+  border-radius: 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-.registro-button.esquecimento {
-  background-color: #ffc107;
-  color: #000;
-  margin-left: 1rem;
-}
-
-.registro-button.esquecimento:hover:not(:disabled) {
-  background-color: #e0a800;
-}
-
-.registro-button.esquecimento i {
-  margin-right: 0.5rem;
-}
-
-@media (max-width: 768px) {
-  .registro-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .registro-card,
-  .registros-hoje-card {
-    width: 100%;
-  }
+  margin-bottom: 1rem;
 }
 
 .btn-ajuste {
   background: none;
   border: none;
-  color: #6c757d;
-  cursor: pointer;
+  color: var(--text-secondary);
   padding: 0.5rem;
-  border-radius: 4px;
+  border-radius: 8px;
+  cursor: pointer;
   transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-ajuste:hover {
-  color: #007bff;
-  background-color: rgba(0, 123, 255, 0.1);
+  color: var(--primary-color);
+  background: rgba(67, 24, 255, 0.1);
+  transform: scale(1.1);
+}
+
+.btn-ajuste i {
+  font-size: 1.25rem;
 }
 
 .loading-spinner {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.5rem;
-  color: #666;
+  gap: 1rem;
+  padding: 2rem;
+  color: var(--text-secondary);
+  font-weight: 500;
 }
 
 .spinner.dark {
   border-color: rgba(0, 0, 0, 0.2);
-  border-top-color: #333;
+  border-top-color: var(--text-color);
 }
 
 .no-data {
   text-align: center;
-  padding: 1.5rem;
-  color: #666;
-  background-color: #f8f9fa;
-  border-radius: 4px;
+  padding: 2rem;
+  color: var(--text-secondary);
+  background: #f8f9fa;
+  border-radius: 16px;
+  font-weight: 500;
 }
 
 .alertas-list {
@@ -1160,65 +1158,81 @@ textarea.form-control {
 }
 
 .alerta-card {
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  padding: 1rem;
-  background-color: #f8f9fa;
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.alerta-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
 .alerta-header {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .alerta-header > div {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
 }
 
 .alerta-header i {
-  color: #666;
+  font-size: 1rem;
+  color: var(--primary-color);
 }
 
 .alerta-status {
-  padding: 0.25rem 0.75rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
   border-radius: 999px;
+  text-align: center;
   font-size: 0.875rem;
-  font-weight: 500;
 }
 
 .alerta-status.pendente {
-  background-color: #fff3cd;
+  background: linear-gradient(135deg, #FFF3CD 0%, #FFE5A3 100%);
   color: #856404;
 }
 
 .alerta-status.aprovado {
-  background-color: #d4edda;
+  background: linear-gradient(135deg, #D4EDDA 0%, #C3E6CB 100%);
   color: #155724;
 }
 
 .alerta-status.rejeitado {
-  background-color: #f8d7da;
-  color: #721c24;
+  background: linear-gradient(135deg, #F8D7DA 0%, #F5C6CB 100%);
+  color: #721C24;
 }
 
-.alerta-body {
-  margin-bottom: 1rem;
+.alerta-body,
+.alerta-feedback {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+}
+
+.alerta-body strong,
+.alerta-feedback strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--text-color);
+  font-weight: 600;
 }
 
 .alerta-body p,
 .alerta-feedback p {
-  margin: 0.5rem 0;
-  color: #555;
-}
-
-.alerta-feedback {
-  padding-top: 1rem;
-  border-top: 1px solid #ddd;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
 }
 
 .resumo-periodo-section {
@@ -1306,5 +1320,48 @@ textarea.form-control {
 
 .btn-historico:hover {
   background-color: #f0f0f0;
+}
+
+@media (max-width: 768px) {
+  .modal-content {
+    padding: 1.5rem;
+    border-radius: 20px;
+    width: 95%;
+  }
+
+  .alerta-header {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-content {
+    padding: 1.25rem;
+    border-radius: 16px;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    min-width: 100px;
+  }
+}
+
+.registro-button.esquecimento {
+  background: linear-gradient(135deg, #4A5568 0%, #2D3748 100%);
+  color: white;
+  margin-left: 1rem;
+}
+
+.registro-button.esquecimento:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2D3748 0%, #1A202C 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(45, 55, 72, 0.2);
+}
+
+.registro-button.esquecimento i {
+  margin-right: 0.5rem;
+  color: #FCD34D;
 }
 </style> 

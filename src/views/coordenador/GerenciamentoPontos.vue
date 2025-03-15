@@ -2,7 +2,7 @@
   <div class="gerenciamento-container">
     <h2>Gerenciamento de Pontos</h2>
 
-    <div class="secao-status">
+    <div class="secao-status" data-status="todos">
       <div class="secao-header" @click="toggleSecao('todos')">
         <h3>Todos os Status</h3>
         <span class="contador">{{ todosCount }}</span>
@@ -94,7 +94,7 @@
         </div>
       </div>
 
-    <div class="secao-status">
+    <div class="secao-status" data-status="pendente">
       <div class="secao-header" @click="toggleSecao('pendente')">
         <h3>Pendentes</h3>
         <span class="contador">{{ pendentesCount }}</span>
@@ -186,7 +186,7 @@
       </div>
       </div>
 
-    <div class="secao-status">
+    <div class="secao-status" data-status="aprovado">
       <div class="secao-header" @click="toggleSecao('aprovado')">
         <h3>Aprovados</h3>
         <span class="contador">{{ aprovadosCount }}</span>
@@ -278,7 +278,7 @@
       </div>
     </div>
 
-    <div class="secao-status">
+    <div class="secao-status" data-status="rejeitado">
       <div class="secao-header" @click="toggleSecao('rejeitado')">
         <h3>Rejeitados</h3>
         <span class="contador">{{ rejeitadosCount }}</span>
@@ -573,152 +573,227 @@ export default {
 }
 
 h2 {
+  color: var(--text-color);
+  font-size: 1.75rem;
+  font-weight: 700;
   margin-bottom: 2rem;
 }
 
 .secao-status {
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
+  background: var(--content-background);
+  border-radius: 20px;
+  box-shadow: 0 4px 12px var(--shadow-color);
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.secao-status:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
 .secao-header {
-  background: white;
-  padding: 1rem;
-  border-radius: 8px;
+  padding: 1.5rem;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 1rem;
   cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  border: 1px solid #eee;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  background: linear-gradient(to right, rgba(var(--va-primary), 0.05), rgba(var(--va-primary), 0.02));
+  border-bottom: 2px solid var(--border-color);
 }
 
 .secao-header:hover {
-  background: #f8f9fa;
+  background: linear-gradient(to right, rgba(var(--va-primary), 0.1), rgba(var(--va-primary), 0.05));
 }
 
 .secao-header h3 {
+  flex: 1;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-color);
   margin: 0;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
-.secao-header .contador {
-  background: #e9ecef;
-  padding: 0.25rem 0.75rem;
+.secao-header h3::before {
+  content: '';
+  display: block;
+  width: 4px;
+  height: 24px;
+  background: var(--primary-color);
+  border-radius: 2px;
+}
+
+.contador {
+  background: rgba(var(--va-primary), 0.1);
+  color: var(--primary-color);
+  padding: 0.5rem 1rem;
   border-radius: 20px;
   font-size: 0.875rem;
-  color: #495057;
+  font-weight: 600;
+  min-width: 40px;
+  text-align: center;
 }
 
 .secao-header i {
+  color: var(--primary-color);
   transition: transform 0.3s ease;
+  font-size: 1.1rem;
 }
 
-.secao-header.expanded i {
+.secao-header i.expanded {
   transform: rotate(180deg);
 }
 
 .secao-content {
-  margin-top: 1rem;
+  padding: 1.5rem;
+  background: var(--content-background);
+  border-radius: 0 0 20px 20px;
 }
 
 .solicitacoes-list {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
   gap: 1.5rem;
 }
 
 .solicitacao-card {
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
   overflow: hidden;
-  border: 1px solid #eee;
+  transition: all 0.2s ease;
+  border: 1px solid var(--border-color);
+}
+
+.solicitacao-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
 .solicitacao-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   padding: 1rem;
-  background: #f8f9fa;
-  border-bottom: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: white;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .aluno-info {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex: 1;
+}
+
+.aluno-info i {
+  color: var(--primary-color);
+  font-size: 1.25rem;
+}
+
+.aluno-info span {
+  font-weight: 600;
+  color: var(--text-color);
 }
 
 .tipo-badge {
+  font-size: 0.75rem;
   padding: 0.25rem 0.75rem;
   border-radius: 20px;
-  font-size: 0.875rem;
-  background-color: #e9ecef;
-  color: #495057;
+  background: rgba(var(--va-primary), 0.1);
+  color: var(--primary-color);
+  font-weight: 600;
 }
 
 .status-badge {
+  font-size: 0.75rem;
   padding: 0.25rem 0.75rem;
   border-radius: 20px;
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .status-badge.pendente {
-  background-color: #fff3cd;
-  color: #856404;
+  background-color: #FFF4E5;
+  color: #FF9800;
 }
 
 .status-badge.aprovado {
-  background-color: #d4edda;
-  color: #155724;
+  background-color: #E6F4EA;
+  color: #1E8E3E;
 }
 
 .status-badge.rejeitado {
-  background-color: #f8d7da;
-  color: #721c24;
+  background-color: #FFF2F2;
+  color: #FF3B3B;
 }
 
 .solicitacao-content {
   padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .info-row {
-  margin-bottom: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
 }
 
 .info-row .label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  min-width: 140px;
+}
+
+.info-row .value {
+  font-size: 0.875rem;
+  color: var(--text-color);
   font-weight: 500;
-  color: #666;
-  display: block;
-  margin-bottom: 0.25rem;
 }
 
 .justificativa {
-  margin: 0.5rem 0;
-  color: #333;
+  font-size: 0.875rem;
+  color: var(--text-color);
+  line-height: 1.5;
+  margin: 0;
 }
 
 .solicitacao-actions {
   padding: 1rem;
-  background: #f8f9fa;
-  border-top: 1px solid #eee;
+  background: white;
+  border-top: 1px solid var(--border-color);
 }
 
 .observacao-field {
   margin-bottom: 1rem;
 }
 
-.observacao-field textarea {
+.observacao-field label {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+textarea {
   width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  padding: 0.75rem;
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  font-size: 0.875rem;
   resize: vertical;
+  min-height: 80px;
+  transition: all 0.2s ease;
+}
+
+textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 4px rgba(67, 24, 255, 0.1);
 }
 
 .action-buttons {
@@ -726,50 +801,126 @@ h2 {
   gap: 1rem;
 }
 
-.btn-aprovar,
-.btn-rejeitar {
-  padding: 0.5rem 1rem;
+.action-buttons button {
+  flex: 1;
+  padding: 0.75rem;
   border: none;
-  border-radius: 4px;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
-  font-weight: 500;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .btn-aprovar {
-  background-color: #28a745;
+  background-color: var(--primary-color);
   color: white;
 }
 
 .btn-aprovar:hover {
-  background-color: #218838;
+  background-color: #3612D9;
+  transform: translateY(-1px);
 }
 
 .btn-rejeitar {
-  background-color: #dc3545;
+  background-color: #FF3B3B;
   color: white;
 }
 
 .btn-rejeitar:hover {
-  background-color: #c82333;
+  background-color: #E63535;
+  transform: translateY(-1px);
 }
 
 .solicitacao-feedback {
   padding: 1rem;
-  background: #f8f9fa;
-  border-top: 1px solid #eee;
+  background: white;
+  border-top: 1px solid var(--border-color);
 }
 
 .observacao {
+  margin-bottom: 1rem;
+}
+
+.observacao strong {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
   margin-bottom: 0.5rem;
 }
 
-.feedback-info {
+.observacao p {
   font-size: 0.875rem;
-  color: #666;
+  color: var(--text-color);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.feedback-info {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 1200px) {
+  .gerenciamento-container {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .gerenciamento-container {
+    padding: 1rem;
+  }
+
+  .secao-header {
+    padding: 1rem;
+  }
+
+  .secao-content {
+    padding: 1rem;
+  }
+
+  .solicitacao-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .action-buttons button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .gerenciamento-container {
+    padding: 0.75rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .secao-header h3 {
+    font-size: 1.125rem;
+  }
+
+  .info-row {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .info-row .label {
+    min-width: auto;
+  }
 }
 
 .loading-indicator {
@@ -818,28 +969,5 @@ h2 {
   padding: 1rem;
   background-color: #d4edda;
   border-radius: 4px;
-}
-
-@media (max-width: 768px) {
-  .gerenciamento-container {
-    padding: 1rem;
-  }
-
-  .solicitacoes-list {
-    grid-template-columns: 1fr;
-  }
-
-  .action-buttons {
-    flex-direction: column;
-  }
-
-  .info-row {
-    flex-direction: column;
-  }
-
-  .info-row .label {
-    min-width: auto;
-    margin-bottom: 0.25rem;
-  }
 }
 </style>
