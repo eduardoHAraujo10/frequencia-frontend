@@ -423,7 +423,29 @@ onUnmounted(() => {
 .menu-item :deep(.va-button.active) {
   background: rgba(255, 255, 255, 0.15);
   color: white;
-  font-weight: 500;
+  font-weight: 600;
+  transform: translateX(8px);
+  position: relative;
+}
+
+.menu-item :deep(.va-button.active)::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 4px;
+  background: white;
+  border-radius: 0 4px 4px 0;
+}
+
+.menu-item :deep(.va-button.active .va-icon) {
+  transform: scale(1.1);
+}
+
+.menu-item :deep(.va-button.active:hover) {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateX(8px);
 }
 
 .sidebar-header :deep(.va-icon) {
