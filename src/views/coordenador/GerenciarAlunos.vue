@@ -13,17 +13,24 @@
         <div class="form-group">
           <va-input
             v-model="formData.username"
-            label="Nome de usuário"
+            label="Nome do aluno"
             :error="errors.username"
           />
         </div>
 
         <div class="form-group">
           <va-input
-            v-model="formData.password"
-            type="password"
-            label="Senha"
-            :error="errors.password"
+            v-model="formData.email"
+            label="E-mail"
+            :error="errors.email"
+          />
+        </div>
+
+        <div class="form-group">
+          <va-input
+            v-model="formData.matricula"
+            label="Matrícula"
+            :error="errors.matricula"
           />
         </div>
 
@@ -145,17 +152,15 @@ export default {
     });
 
     const validateField = (field) => {
+      // Só valida se o campo não estiver vazio
+      if (!formData.value[field]) return;
+      
       errors.value[field] = '';
       
       switch (field) {
         case 'username':
           if (formData.value.username.length < 3) {
-            errors.value.username = 'O nome de usuário deve ter pelo menos 3 caracteres';
-          }
-          break;
-        case 'password':
-          if (formData.value.password.length < 8) {
-            errors.value.password = 'A senha deve ter pelo menos 8 caracteres';
+            errors.value.username = 'O nome deve ter pelo menos 3 caracteres';
           }
           break;
         case 'email':
@@ -173,42 +178,80 @@ export default {
     };
 
     const validateForm = () => {
-      ['username', 'password', 'email', 'matricula'].forEach(field => {
-        validateField(field);
-      });
-      return !hasErrors.value;
+      let isValid = true;
+      
+      // Validar nome
+      if (!formData.value.username || formData.value.username.length < 3) {
+        errors.value.username = 'O nome deve ter pelo menos 3 caracteres';
+        isValid = false;
+      } else {
+        errors.value.username = '';
+      }
+
+      // Validar email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!formData.value.email || !emailRegex.test(formData.value.email)) {
+        errors.value.email = 'Digite um e-mail válido';
+        isValid = false;
+      } else {
+        errors.value.email = '';
+      }
+
+      // Validar matrícula
+      if (!formData.value.matricula) {
+        errors.value.matricula = 'A matrícula é obrigatória';
+        isValid = false;
+      } else {
+        errors.value.matricula = '';
+      }
+
+      return isValid;
     };
 
-    const handleSubmit = async () => {
-      if (!validateForm()) return;
+    const handleSubmit = async (e) => {
+      e.preventDefault(); // Previne o comportamento padrão do formulário
+      
+      if (!validateForm()) {
+        message.value = 'Por favor, preencha todos os campos corretamente';
+        messageType.value = 'error';
+        return;
+      }
       
       loading.value = true;
       message.value = '';
       messageType.value = '';
 
       try {
-        // Criar objeto com dados do formulário e senha igual à matrícula
         const dadosCadastro = {
-          ...formData.value,
-          password: formData.value.password // Define a senha igual à matrícula
+          nome: formData.value.username,
+          email: formData.value.email,
+          matricula: formData.value.matricula,
+          senha: formData.value.matricula, // Alterado de password para senha
+          tipo: 'aluno'
         };
+
+        console.log('Enviando dados:', dadosCadastro);
 
         const response = await axios.post('http://localhost:8000/api/v1/gerenciador/alunos', dadosCadastro, {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
           }
         });
         
-        if (response.data.status === 'success') {
+        console.log('Resposta:', response);
+        
+        if (response.status === 201 || response.status === 200) { // Verifica ambos os status de sucesso
           message.value = 'Aluno cadastrado com sucesso! A senha é igual à matrícula.';
           messageType.value = 'success';
-          await carregarAlunos(); // Recarrega a lista
+          await carregarAlunos();
           setTimeout(() => {
             showModal.value = false;
             resetForm();
           }, 2000);
         }
       } catch (err) {
+        console.error('Erro ao cadastrar:', err);
         message.value = err.response?.data?.message || 'Erro ao cadastrar aluno';
         messageType.value = 'error';
       } finally {
@@ -219,14 +262,12 @@ export default {
     const resetForm = () => {
       formData.value = {
         username: '',
-        password: '',
         email: '',
         matricula: '',
         tipo: 'aluno'
       };
       errors.value = {
         username: '',
-        password: '',
         email: '',
         matricula: ''
       };
