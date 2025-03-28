@@ -126,20 +126,58 @@
             </tr>
           </thead>
           <tbody>
-              <tr v-for="aluno in alunosDetalhados" :key="aluno.id">
-                <td>{{ aluno.nome }}</td>
-                <td>{{ aluno.matricula }}</td>
-                <td>{{ aluno.diasPresenca }}</td>
-                <td>{{ aluno.porcentagemPresenca }}%</td>
-                <td>{{ formatarData(aluno.primeiroRegistro) }}</td>
-                <td>{{ formatarData(aluno.ultimoRegistro) }}</td>
-                <td>{{ formatarHora(aluno.horarioUltimoRegistro) }}</td>
-                <td>
-                  <span :class="['status-badge', aluno.ativo ? 'ativo' : 'inativo']">
-                    {{ aluno.ativo ? 'Ativo' : 'Inativo' }}
-                </span>
-              </td>
-            </tr>
+              <template v-for="aluno in alunosDetalhados" :key="aluno.id">
+                <tr @click="toggleDetalhes(aluno.id)" :class="{ 'expandido': alunoExpandido === aluno.id }" class="aluno-row">
+                  <td>
+                    <div class="nome-container">
+                      <i class="fas" :class="alunoExpandido === aluno.id ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
+                      {{ aluno.nome }}
+                    </div>
+                  </td>
+                  <td>{{ aluno.matricula }}</td>
+                  <td>{{ aluno.diasPresenca }}</td>
+                  <td>{{ aluno.porcentagemPresenca }}%</td>
+                  <td>{{ formatarData(aluno.primeiroRegistro) }}</td>
+                  <td>{{ formatarData(aluno.ultimoRegistro) }}</td>
+                  <td>{{ formatarHora(aluno.horarioUltimoRegistro) }}</td>
+                  <td>
+                    <span :class="['status-badge', aluno.ativo ? 'ativo' : 'inativo']">
+                      {{ aluno.ativo ? 'Ativo' : 'Inativo' }}
+                    </span>
+                  </td>
+                </tr>
+                <tr v-if="alunoExpandido === aluno.id" class="detalhes-row">
+                  <td colspan="8">
+                    <div class="registros-detalhados">
+                      <div class="periodo-detalhes">
+                        <h4>Registros do Período</h4>
+                        <div class="periodo-info-detalhes">
+                          <i class="fas fa-calendar-alt"></i>
+                          <span>Período: {{ periodo.inicio }} a {{ periodo.fim }}</span>
+                        </div>
+                      </div>
+                      <table class="registros-table">
+                        <thead>
+                          <tr>
+                            <th>Data</th>
+                            <th>Entrada</th>
+                            <th>Saída</th>
+                            <th>Total de Horas</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr v-for="registro in aluno.registros" :key="registro.data">
+                            <td>{{ registro.data }}</td>
+                            <td>{{ registro.entrada }}</td>
+                            <td>{{ registro.saida }}</td>
+                            <td>{{ registro.total_horas }}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </td>
+                </tr>
+              </template>
           </tbody>
         </table>
         </div>
@@ -157,7 +195,7 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import axios from 'axios';
 
 export default {
@@ -165,6 +203,8 @@ export default {
   setup() {
     const loading = ref(false);
     const error = ref('');
+    const alunoExpandido = ref(null);
+    const periodo = ref(null);
     
     // Filtros
     const filtros = ref({
@@ -185,151 +225,86 @@ export default {
 
     const alunosDetalhados = ref([]);
 
-    // Buscar resumo geral do período
-    const buscarResumo = async () => {
-      try {
-        const response = await axios.get('http://localhost:8000/api/v1/registros/resumo', {
-          params: {
-            dataInicio: filtros.value.dataInicial,
-            dataFim: filtros.value.dataFinal
-          },
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-
-        if (response.data.status === 'success') {
-          const { resumos, periodo } = response.data.data;
-          
-          // Calcular totais do período
-          const totalHoras = resumos.reduce((total, aluno) => {
-            return total + (aluno.total_horas_trabalhadas || 0);
-          }, 0);
-
-          const mediaPresenca = resumos.reduce((total, aluno) => {
-            return total + (aluno.porcentagem_presenca || 0);
-          }, 0) / (resumos.length || 1);
-
-          resumoGeral.value = {
-            ...resumoGeral.value,
-            totalHorasRegistradas: totalHoras.toFixed(2),
-            mediaPresencaGeral: mediaPresenca.toFixed(1),
-            periodo: periodo
-          };
-        }
-      } catch (err) {
-        console.error('Erro ao buscar resumo:', err);
-      }
-    };
-
-    // Buscar dados de presença
-    const buscarPresencas = async () => {
-      try {
-        const response = await axios.get('http://localhost:8000/api/v1/gerenciador/presencas', {
-          params: {
-            dataInicio: filtros.value.dataInicial,
-            dataFim: filtros.value.dataFinal
-          },
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-
-        if (response.data.status === 'success') {
-          const { estatisticas } = response.data.data;
-          resumoGeral.value = {
-            ...resumoGeral.value,
-            totalAlunosAtivos: estatisticas.total_alunos,
-            totalAlunosPresentes: estatisticas.presentes,
-            porcentagemPresenca: estatisticas.porcentagem_presenca
-          };
-        }
-      } catch (err) {
-        console.error('Erro ao buscar presenças:', err);
-      }
-    };
-
-    // Buscar lista de alunos
-    const buscarAlunos = async () => {
-      try {
-        const response = await axios.get('http://localhost:8000/api/v1/gerenciador/alunos', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-
-        if (response.data.status === 'success') {
-          const { alunos } = response.data.data;
-          
-          // Filtrar alunos conforme os filtros
-          const alunosFiltrados = alunos.filter(aluno => {
-            const nomeMatch = !filtros.value.nomeAluno || 
-              aluno.nome.toLowerCase().includes(filtros.value.nomeAluno.toLowerCase());
-            const matriculaMatch = !filtros.value.matricula || 
-              aluno.matricula.includes(filtros.value.matricula);
-            const statusMatch = !filtros.value.status || 
-              (filtros.value.status === 'presente' ? aluno.presente : 
-                (filtros.value.status === 'ausente' ? !aluno.presente : true) && 
-                (filtros.value.status === 'justificado' ? aluno.justificado : true));
-            
-            return nomeMatch && matriculaMatch && statusMatch;
-          });
-
-          // Buscar frequência detalhada para cada aluno
-          const frequencias = await Promise.all(
-            alunosFiltrados.map(async (aluno) => {
-              try {
-                const freqResponse = await axios.get(
-                  `http://localhost:8000/api/v1/gerenciador/alunos/${aluno.id}/frequencia`,
-          {
-            params: {
-                      dataInicio: filtros.value.dataInicial,
-                      dataFim: filtros.value.dataFinal
-            },
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-          }
-        );
-
-                if (freqResponse.data.status === 'success') {
-                  const { estatisticas, registros } = freqResponse.data.data;
-                  return {
-                    ...aluno,
-                    diasPresenca: estatisticas.dias_presenca,
-                    diasAusencia: estatisticas.dias_ausencia,
-                    porcentagemPresenca: estatisticas.porcentagem_presenca,
-                    totalHorasTrabalhadas: estatisticas.total_horas_trabalhadas,
-                    primeiroRegistro: registros.length > 0 ? registros[0].data : null,
-                    ultimoRegistro: registros.length > 0 ? registros[registros.length - 1].data : null,
-                    horarioUltimoRegistro: registros.length > 0 ? registros[registros.length - 1].entrada : null
-                  };
-                }
-                return aluno;
-              } catch (err) {
-                console.error(`Erro ao buscar frequência do aluno ${aluno.id}:`, err);
-                return aluno;
-              }
-            })
-          );
-
-          alunosDetalhados.value = frequencias;
-        }
-      } catch (err) {
-        console.error('Erro ao buscar alunos:', err);
-      }
-    };
-
     const gerarRelatorio = async () => {
       loading.value = true;
       error.value = '';
 
       try {
-        await Promise.all([
-          buscarResumo(),
-          buscarPresencas(),
-          buscarAlunos()
-        ]);
+        const response = await axios.get('http://localhost:8000/api/v1/gerenciador/relatorio', {
+          params: {
+            data_inicio: filtros.value.dataInicial,
+            data_fim: filtros.value.dataFinal,
+            nome: filtros.value.nomeAluno || undefined,
+            matricula: filtros.value.matricula || undefined,
+            status: filtros.value.status || 'todos'
+          },
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        if (response.data.status === 'success') {
+          const { resumo, alunos, registros, periodo: periodoData } = response.data.data;
+          periodo.value = periodoData;
+          
+          // Atualizar resumo geral
+          resumoGeral.value = {
+            totalAlunosAtivos: resumo.total_alunos,
+            totalAlunosPresentes: resumo.presentes,
+            mediaPresencaGeral: resumo.media_presenca.toFixed(1),
+            totalHorasRegistradas: resumo.total_horas.toFixed(2)
+          };
+
+          // Atualizar lista de alunos com seus registros
+          alunosDetalhados.value = alunos.map(aluno => {
+            // Processar registros para agrupar entradas e saídas
+            const registrosPorData = {};
+            
+            // Filtrar registros do aluno atual
+            const registrosDoAluno = registros
+              .filter(reg => reg.matricula === aluno.matricula)
+              .sort((a, b) => {
+                const dataComparison = a.data.localeCompare(b.data);
+                if (dataComparison === 0) {
+                  return a.hora.localeCompare(b.hora);
+                }
+                return dataComparison;
+              });
+
+            // Agrupar registros por data
+            let periodoAtual = null;
+            registrosDoAluno.forEach(reg => {
+              if (!registrosPorData[reg.data]) {
+                registrosPorData[reg.data] = [];
+              }
+
+              if (reg.tipo === 'Entrada') {
+                periodoAtual = { data: reg.data, entrada: reg.hora, saida: null, total_horas: '00:00' };
+                registrosPorData[reg.data].push(periodoAtual);
+              } else if (reg.tipo === 'Saida' && periodoAtual) {
+                periodoAtual.saida = reg.hora;
+                periodoAtual.total_horas = calcularDiferencaHoras(periodoAtual.entrada, reg.hora);
+                periodoAtual = null;
+              }
+            });
+
+            // Converter para array de registros
+            const registrosProcessados = Object.entries(registrosPorData)
+              .flatMap(([data, periodos]) => periodos);
+
+            return {
+              ...aluno,
+              diasPresenca: aluno.estatisticas.dias_presenca,
+              diasAusencia: aluno.estatisticas.dias_ausencia,
+              porcentagemPresenca: aluno.estatisticas.porcentagem_presenca.toFixed(2),
+              totalHorasTrabalhadas: aluno.estatisticas.total_horas_trabalhadas.toFixed(2),
+              primeiroRegistro: aluno.primeiro_registro,
+              ultimoRegistro: aluno.ultimo_registro,
+              horarioUltimoRegistro: aluno.horario_ultimo_registro,
+              registros: registrosProcessados
+            };
+          });
+        }
       } catch (err) {
         error.value = 'Erro ao gerar relatório. Por favor, tente novamente.';
         console.error(err);
@@ -338,13 +313,47 @@ export default {
       }
     };
 
+    const calcularDiferencaHoras = (horaEntrada, horaSaida) => {
+      if (!horaEntrada || !horaSaida) return '0:00';
+
+      const [horasEntrada, minutosEntrada, segundosEntrada = 0] = horaEntrada.split(':').map(Number);
+      const [horasSaida, minutosSaida, segundosSaida = 0] = horaSaida.split(':').map(Number);
+
+      const entradaEmMinutos = horasEntrada * 60 + minutosEntrada + segundosEntrada / 60;
+      const saidaEmMinutos = horasSaida * 60 + minutosSaida + segundosSaida / 60;
+      
+      const diferencaMinutos = saidaEmMinutos - entradaEmMinutos;
+      
+      const horas = Math.floor(diferencaMinutos / 60);
+      const minutos = Math.floor(diferencaMinutos % 60);
+      
+      return `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}`;
+    };
+
+    // Observar mudanças nos filtros
+    watch(
+      () => ({ ...filtros.value }),
+      () => {
+        gerarRelatorio();
+      },
+      { deep: true }
+    );
+
     const formatarData = (data) => {
       if (!data) return '-';
+      // Verifica se a data já está no formato dd/mm/yyyy
+      if (data.includes('/')) {
+        return data;
+      }
       return new Date(data).toLocaleDateString('pt-BR');
     };
 
     const formatarHora = (hora) => {
       if (!hora) return '-';
+      // Se já estiver no formato HH:mm, retorna como está
+      if (hora.match(/^\d{2}:\d{2}$/)) {
+        return hora;
+      }
       return new Date(`2000-01-01T${hora}`).toLocaleTimeString('pt-BR', {
         hour: '2-digit',
         minute: '2-digit'
@@ -358,11 +367,11 @@ export default {
           'http://localhost:8000/api/v1/gerenciador/exportar-registros',
           {
             params: {
-              dataInicio: filtros.value.dataInicial,
-              dataFim: filtros.value.dataFinal,
+              data_inicio: filtros.value.dataInicial,
+              data_fim: filtros.value.dataFinal,
               nome: filtros.value.nomeAluno || undefined,
               matricula: filtros.value.matricula || undefined,
-              status: filtros.value.status || undefined,
+              status: filtros.value.status || 'todos',
               formato: 'pdf'
             },
             responseType: 'blob',
@@ -392,6 +401,14 @@ export default {
       }
     };
 
+    const toggleDetalhes = (alunoId) => {
+      if (alunoExpandido.value === alunoId) {
+        alunoExpandido.value = null;
+      } else {
+        alunoExpandido.value = alunoId;
+      }
+    };
+
     onMounted(() => {
       // Definir data inicial como primeiro dia do mês atual
       const hoje = new Date();
@@ -409,6 +426,9 @@ export default {
       filtros,
       resumoGeral,
       alunosDetalhados,
+      alunoExpandido,
+      periodo,
+      toggleDetalhes,
       gerarRelatorio,
       formatarData,
       formatarHora,
@@ -431,6 +451,9 @@ export default {
   border-radius: 12px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .header-actions h2 {
@@ -791,5 +814,211 @@ tr:hover {
 
 .relatorios-container {
   animation: fadeIn 0.5s ease-out;
+}
+
+.aluno-row {
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.aluno-row:hover {
+  background-color: #f8fafc;
+}
+
+.aluno-row.expandido {
+  background-color: #f1f5f9;
+}
+
+.nome-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.nome-container i {
+  min-width: 12px;
+  display: flex;
+  justify-content: center;
+}
+
+.registros-detalhados {
+  padding: 1.5rem;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  margin: 0.5rem 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.registros-detalhados h4 {
+  color: #1a237e;
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.periodo-detalhes {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.periodo-info-detalhes {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: #edf2f7;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: #4a5568;
+  font-weight: 500;
+}
+
+.registros-table th,
+.registros-table td {
+  padding: 0.875rem 1rem;
+  font-size: 0.875rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.registros-table th {
+  background-color: #f8fafc;
+  color: #2d3748;
+  font-weight: 600;
+  text-align: left;
+}
+
+/* Alinhamento específico para cada tipo de coluna */
+.registros-table th:nth-child(1),
+.registros-table td:nth-child(1) {
+  /* Data */
+  text-align: left;
+  width: 15%;
+}
+
+.registros-table th:nth-child(2),
+.registros-table td:nth-child(2),
+.registros-table th:nth-child(3),
+.registros-table td:nth-child(3) {
+  /* Entrada e Saída */
+  text-align: center;
+  width: 20%;
+}
+
+.registros-table th:nth-child(4),
+.registros-table td:nth-child(4) {
+  /* Total de Horas */
+  text-align: center;
+  width: 15%;
+}
+
+/* Alinhamento para a tabela principal de alunos */
+table th:nth-child(1),
+table td:nth-child(1) {
+  /* Nome */
+  text-align: left;
+  width: 20%;
+}
+
+table th:nth-child(2),
+table td:nth-child(2) {
+  /* Matrícula */
+  text-align: center;
+  width: 12%;
+}
+
+table th:nth-child(3),
+table td:nth-child(3) {
+  /* Dias Presentes */
+  text-align: center;
+  width: 10%;
+}
+
+table th:nth-child(4),
+table td:nth-child(4) {
+  /* % Presença */
+  text-align: center;
+  width: 10%;
+}
+
+table th:nth-child(5),
+table td:nth-child(5),
+table th:nth-child(6),
+table td:nth-child(6) {
+  /* Primeiro e Último Registro */
+  text-align: center;
+  width: 12%;
+}
+
+table th:nth-child(7),
+table td:nth-child(7) {
+  /* Horário Último Registro */
+  text-align: center;
+  width: 12%;
+}
+
+table th:nth-child(8),
+table td:nth-child(8) {
+  /* Status */
+  text-align: center;
+  width: 12%;
+}
+
+/* Ajuste do status badge para centralizar */
+td .status-badge {
+  justify-content: center;
+  margin: 0 auto;
+  width: fit-content;
+}
+
+/* Ajuste para o ícone de expansão */
+.nome-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.nome-container i {
+  min-width: 12px;
+  display: flex;
+  justify-content: center;
+}
+
+/* Ajuste para o período nos detalhes */
+.periodo-detalhes {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.periodo-info-detalhes {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: #edf2f7;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: #4a5568;
+  font-weight: 500;
+}
+
+/* Ajuste para garantir que as tabelas mantenham a largura correta */
+.registros-table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+/* Ajuste para células com conteúdo longo */
+td, th {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style> 
