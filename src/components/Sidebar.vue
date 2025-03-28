@@ -112,7 +112,7 @@ const menuItems = computed(() => {
         route: '/frequencias'
       },
       {
-        label: 'Gerenciamento de Solicitações',
+        label: 'Solicitações de alteração',
         icon: 'mdi-clock-outline',
         command: () => router.push('/gerenciamento-pontos'),
         route: '/gerenciamento-pontos'
