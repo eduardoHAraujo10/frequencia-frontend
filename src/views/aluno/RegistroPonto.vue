@@ -281,6 +281,8 @@
 
 <script>
 import axios from 'axios';
+import { onMounted, onUnmounted } from 'vue';
+import { websocketService } from '../../services/websocket';
 
 export default {
   name: 'RegistroPonto',
@@ -685,6 +687,20 @@ export default {
     await this.carregarAlertas();
     this.updateDateTime();
     this.clockInterval = setInterval(this.updateDateTime, 1000);
+
+    const handleWebSocketMessage = (payload) => {
+      if (payload.type === 'registro_atualizado') {
+        this.carregarDados();
+      }
+    };
+
+    onMounted(() => {
+      websocketService.subscribe('registro_atualizado', handleWebSocketMessage);
+    });
+
+    onUnmounted(() => {
+      websocketService.unsubscribe('registro_atualizado', handleWebSocketMessage);
+    });
   }
 };
 </script>
@@ -1036,9 +1052,9 @@ export default {
 
 .form-control:focus {
   outline: none;
-  border-color: var(--primary-color);
+  border-color: #FF6B00;
   background: white;
-  box-shadow: 0 0 0 4px rgba(67, 24, 255, 0.1);
+  box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.1);
 }
 
 textarea.form-control {
@@ -1068,14 +1084,14 @@ textarea.form-control {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary-color) 0%, #868CFF 100%);
+  background: linear-gradient(135deg, #FF6B00 0%, #FF9E4F 100%);
   color: white;
   border: none;
 }
 
 .btn-primary:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(67, 24, 255, 0.2);
+  box-shadow: 0 8px 24px rgba(255, 107, 0, 0.2);
 }
 
 .btn-primary:disabled {
@@ -1095,7 +1111,7 @@ textarea.form-control {
 }
 
 .registro-atual {
-  background: linear-gradient(135deg, rgba(67, 24, 255, 0.05) 0%, rgba(134, 140, 255, 0.05) 100%);
+  background: linear-gradient(135deg, rgba(255, 107, 0, 0.05) 0%, rgba(255, 158, 79, 0.05) 100%);
   padding: 1rem;
   border-radius: 12px;
   display: flex;
@@ -1118,8 +1134,8 @@ textarea.form-control {
 }
 
 .btn-ajuste:hover {
-  color: var(--primary-color);
-  background: rgba(67, 24, 255, 0.1);
+  color: #FF6B00;
+  background: rgba(255, 107, 0, 0.1);
   transform: scale(1.1);
 }
 
@@ -1187,7 +1203,7 @@ textarea.form-control {
 
 .alerta-header i {
   font-size: 1rem;
-  color: var(--primary-color);
+  color: #FF6B00;
 }
 
 .alerta-status {

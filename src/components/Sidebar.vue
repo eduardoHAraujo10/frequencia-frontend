@@ -201,7 +201,7 @@ onUnmounted(() => {
 .sidebar {
   width: 280px;
   height: 100vh;
-  background: linear-gradient(180deg, #1a237e 0%, #283593 100%);
+  background: linear-gradient(180deg, #FF6B00 0%, #FF8C00 100%);
   color: white;
   position: fixed;
   left: 0;
@@ -210,7 +210,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   z-index: 1000;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -224,9 +224,11 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   min-height: 70px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.1);
+  gap: 1.5rem;
+  position: relative;
 }
 
 .sidebar-header h3 {
@@ -237,6 +239,41 @@ onUnmounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+  padding-right: 55px;
+}
+
+.sidebar-header :deep(.va-button) {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border-radius: 8px;
+  padding: 0.5rem;
+  flex-shrink: 0;
+  min-width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.sidebar-header :deep(.va-button:hover) {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.sidebar-header :deep(.va-icon) {
+  font-size: 1.5rem;
+}
+
+.sidebar-collapsed .sidebar-header :deep(.va-icon) {
+  transform: rotate(180deg);
 }
 
 .user-info {
@@ -247,6 +284,7 @@ onUnmounted(() => {
   align-items: center;
   gap: 0.75rem;
   background: rgba(255, 255, 255, 0.05);
+  margin-bottom: 1rem;
 }
 
 .user-details {
@@ -258,10 +296,11 @@ onUnmounted(() => {
   margin: 0.5rem 0;
   font-weight: 600;
   color: white;
-  font-size: 1rem;
+  font-size: 1.1rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-align: center;
 }
 
 .menu-container {
@@ -284,18 +323,25 @@ onUnmounted(() => {
   width: 100%;
   border-radius: 8px;
   transition: all 0.2s ease;
-  color: rgba(255, 255, 255, 0.8);
+  color: #2B3674;
+  background: rgba(255, 255, 255, 0.95);
+  margin-bottom: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(43, 54, 116, 0.1);
 }
 
 .menu-item :deep(.va-button:hover) {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+  background: rgba(255, 255, 255, 1);
+  color: #2B3674;
   transform: translateX(5px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  border-color: rgba(43, 54, 116, 0.2);
 }
 
 .menu-item :deep(.va-button__content) {
   justify-content: flex-start;
-  gap: 0.75rem;
+  gap: 1rem;
+  padding: 0 1rem;
 }
 
 .menu-item :deep(.va-icon) {
@@ -314,6 +360,8 @@ onUnmounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   font-weight: 500;
+  font-size: 0.95rem;
+  letter-spacing: 0.3px;
 }
 
 .sidebar-footer {
@@ -324,12 +372,17 @@ onUnmounted(() => {
 }
 
 .sidebar-footer :deep(.va-button) {
-  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.95);
+  color: #2B3674;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(43, 54, 116, 0.1);
 }
 
 .sidebar-footer :deep(.va-button:hover) {
-  color: white;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 1);
+  color: #2B3674;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  border-color: rgba(43, 54, 116, 0.2);
 }
 
 .sidebar-collapsed .menu-item :deep(.va-button__content) {
@@ -341,12 +394,23 @@ onUnmounted(() => {
 }
 
 :deep(.va-badge) {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.15);
   color: white;
-  padding: 0.25rem 0.75rem;
+  padding: 0.35rem 1rem;
   border-radius: 12px;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 240px;
+  }
+  
+  .sidebar-collapsed {
+    width: 60px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -358,7 +422,7 @@ onUnmounted(() => {
 
   .sidebar-collapsed {
     transform: translateX(-100%);
-    width: 70px;
+    width: 60px;
   }
 
   .sidebar.show-mobile {
@@ -380,39 +444,71 @@ onUnmounted(() => {
   .sidebar-overlay.show {
     display: block;
   }
+
+  .sidebar-header {
+    padding: 1rem;
+    min-height: 60px;
+  }
+
+  .user-info {
+    padding: 1rem;
+  }
+
+  .menu-container {
+    padding: 0.75rem 0.5rem;
+  }
 }
 
 @media (max-width: 480px) {
   .sidebar {
     max-width: 100%;
+    width: 100%;
+  }
+
+  .sidebar-header h3 {
+    font-size: 1rem;
+  }
+
+  .user-name {
+    font-size: 0.9rem;
+  }
+
+  .menu-item :deep(.va-button) {
+    height: 3rem;
+  }
+
+  .menu-item :deep(.va-icon) {
+    font-size: 1.1rem;
   }
 }
 
 /* Scrollbar personalizada */
 .sidebar::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
 
 .sidebar::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .sidebar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
 }
 
 .sidebar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.4);
 }
 
 /* Animações */
 @keyframes slideIn {
   from {
     transform: translateX(-100%);
+    opacity: 0;
   }
   to {
     transform: translateX(0);
+    opacity: 1;
   }
 }
 
@@ -421,11 +517,13 @@ onUnmounted(() => {
 }
 
 .menu-item :deep(.va-button.active) {
-  background: rgba(255, 255, 255, 0.15);
-  color: white;
+  background: rgba(255, 255, 255, 1);
+  color: #2B3674;
   font-weight: 600;
   transform: translateX(8px);
   position: relative;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  border-color: rgba(43, 54, 116, 0.3);
 }
 
 .menu-item :deep(.va-button.active)::before {
@@ -444,7 +542,7 @@ onUnmounted(() => {
 }
 
 .menu-item :deep(.va-button.active:hover) {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 1);
   transform: translateX(8px);
 }
 

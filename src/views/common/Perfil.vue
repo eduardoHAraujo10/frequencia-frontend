@@ -681,14 +681,14 @@ input:focus {
 }
 
 .save-button {
-  background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+  background: linear-gradient(135deg, #FF6B00 0%, #FF9E4F 100%);
   color: white;
   flex: 1;
 }
 
 .save-button:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(66, 153, 225, 0.2);
+  box-shadow: 0 4px 12px rgba(255, 107, 0, 0.2);
 }
 
 .save-button:disabled {
@@ -870,8 +870,8 @@ input:focus {
 }
 
 .password-form input:focus {
-  border-color: #8b5cf6;
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+  border-color: #FF6B00;
+  box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.1);
   background-color: white;
 }
 
@@ -893,7 +893,7 @@ input:focus {
 }
 
 .password-form .toggle-password:hover {
-  color: #8b5cf6;
+  color: #FF6B00;
 }
 
 .modal-actions {
@@ -928,13 +928,13 @@ input:focus {
 }
 
 .modal-button.confirm-button {
-  background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%) !important;
+  background: linear-gradient(135deg, #FF6B00 0%, #FF9E4F 100%) !important;
   color: white !important;
 }
 
 .modal-button.confirm-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(109, 40, 217, 0.2) !important;
+  box-shadow: 0 4px 12px rgba(255, 107, 0, 0.2) !important;
 }
 
 .message {

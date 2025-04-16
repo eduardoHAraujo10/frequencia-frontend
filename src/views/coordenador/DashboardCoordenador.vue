@@ -363,7 +363,7 @@ export default {
 
 .barra {
   width: 40px;
-  background: var(--primary-color);
+  background: #FF6B00;
   border-radius: 8px;
   position: relative;
   transition: height 0.3s ease;
@@ -393,7 +393,7 @@ export default {
 }
 
 .periodo-card {
-  background: rgba(var(--va-primary), 0.1);
+  background: rgba(255, 107, 0, 0.1);
   border-radius: 16px;
   padding: 1rem;
   text-align: center;
@@ -414,7 +414,7 @@ export default {
 .periodo-total {
   font-size: 1.125rem;
   font-weight: 600;
-  color: var(--primary-color);
+  color: #FF6B00;
 }
 
 /* Distribuição por Horário */
@@ -425,7 +425,7 @@ export default {
 }
 
 .horario-card {
-  background: rgba(var(--va-primary), 0.1);
+  background: rgba(255, 107, 0, 0.1);
   border-radius: 12px;
   padding: 0.75rem;
   text-align: center;
@@ -440,7 +440,7 @@ export default {
 .horario-total {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--primary-color);
+  color: #FF6B00;
 }
 
 /* Estatísticas do Período */
@@ -451,7 +451,7 @@ export default {
 }
 
 .estatistica-card {
-  background: rgba(var(--va-primary), 0.1);
+  background: rgba(255, 107, 0, 0.1);
   border-radius: 16px;
   padding: 1rem;
   text-align: center;
@@ -466,7 +466,7 @@ export default {
 .estatistica-valor {
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--primary-color);
+  color: #FF6B00;
 }
 
 /* Últimos Registros */
@@ -487,7 +487,7 @@ table {
 }
 
 th {
-  background: rgba(var(--va-primary), 0.1);
+  background: rgba(255, 107, 0, 0.1);
   color: var(--text-color);
   font-weight: 600;
   font-size: 0.875rem;

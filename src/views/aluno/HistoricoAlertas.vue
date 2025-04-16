@@ -432,8 +432,8 @@ export default {
 
 .filtro-select:focus,
 .filtro-input:focus {
-  border-color: #4299e1;
-  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+  border-color: #FF6B00;
+  box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.1);
   outline: none;
 }
 
@@ -516,8 +516,8 @@ export default {
 }
 
 .tipo-badge.ajuste {
-  background: linear-gradient(135deg, #e0e7ff 0%, #818cf8 100%);
-  color: #3730a3;
+  background: linear-gradient(135deg, #FFE5CC 0%, #FF9E4F 100%);
+  color: #B33D00;
 }
 
 .alerta-status {
@@ -637,7 +637,7 @@ export default {
   width: 40px;
   height: 40px;
   border: 4px solid #e2e8f0;
-  border-top: 4px solid #4299e1;
+  border-top: 4px solid #FF6B00;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }

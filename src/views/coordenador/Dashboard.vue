@@ -152,8 +152,9 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import axios from 'axios';
+import { websocketService } from '../../services/websocket';
 
 export default {
   name: 'Dashboard',
@@ -223,10 +224,19 @@ export default {
       ]);
     };
 
+    const handleWebSocketMessage = (payload) => {
+      if (payload.type === 'dashboard_atualizado') {
+        atualizarDashboard();
+      }
+    };
+
     onMounted(() => {
       atualizarDashboard();
-      // Atualizar a cada 5 minutos
-      setInterval(atualizarDashboard, 5 * 60 * 1000);
+      websocketService.subscribe('dashboard_atualizado', handleWebSocketMessage);
+    });
+
+    onUnmounted(() => {
+      websocketService.unsubscribe('dashboard_atualizado', handleWebSocketMessage);
     });
 
     return {

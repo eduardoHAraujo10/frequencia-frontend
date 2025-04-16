@@ -21,11 +21,12 @@
 </template>
 
 <script>
-import { computed } from 'vue';
+import { computed, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import LoadingOverlay from './components/LoadingOverlay.vue';
 import Sidebar from './components/Sidebar.vue';
 import { isLoading } from './router';
+import { websocketService } from './services/websocket';
 
 export default {
   name: 'App',
@@ -38,6 +39,16 @@ export default {
 
     const isAuthenticated = computed(() => !!localStorage.getItem('token'));
     const showFooter = computed(() => !['login', 'register'].includes(route.name));
+
+    onMounted(() => {
+      if (isAuthenticated.value) {
+        websocketService.connect();
+      }
+    });
+
+    onUnmounted(() => {
+      websocketService.disconnect();
+    });
 
     return {
       isLoading,
@@ -52,8 +63,8 @@ export default {
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css');
 
 :root {
-  --primary-color: #4318FF;
-  --secondary-color: #868CFF;
+  --primary-color: #FF6B00;
+  --secondary-color: #FF9E4F;
   --background-color: #f5f6fa;
   --content-background: #ffffff;
   --text-color: #2B3674;

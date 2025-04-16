@@ -391,8 +391,9 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import axios from 'axios';
+import { websocketService } from '../../services/websocket';
 
 export default {
   name: 'GerenciamentoPontos',
@@ -540,6 +541,20 @@ export default {
       expanded.value = expanded.value === status ? null : status;
     };
 
+    const handleWebSocketMessage = (payload) => {
+      if (payload.type === 'solicitacao_atualizada') {
+        carregarSolicitacoes();
+      }
+    };
+
+    onMounted(() => {
+      websocketService.subscribe('solicitacao_atualizada', handleWebSocketMessage);
+    });
+
+    onUnmounted(() => {
+      websocketService.unsubscribe('solicitacao_atualizada', handleWebSocketMessage);
+    });
+
     // Carregar dados iniciais
     carregarSolicitacoes();
 
@@ -601,12 +616,12 @@ h2 {
   gap: 1rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  background: linear-gradient(to right, rgba(var(--va-primary), 0.05), rgba(var(--va-primary), 0.02));
+  background: linear-gradient(to right, rgba(255, 107, 0, 0.05), rgba(255, 107, 0, 0.02));
   border-bottom: 2px solid var(--border-color);
 }
 
 .secao-header:hover {
-  background: linear-gradient(to right, rgba(var(--va-primary), 0.1), rgba(var(--va-primary), 0.05));
+  background: linear-gradient(to right, rgba(255, 107, 0, 0.1), rgba(255, 107, 0, 0.05));
 }
 
 .secao-header h3 {
@@ -625,13 +640,13 @@ h2 {
   display: block;
   width: 4px;
   height: 24px;
-  background: var(--primary-color);
+  background: #FF6B00;
   border-radius: 2px;
 }
 
 .contador {
-  background: rgba(var(--va-primary), 0.1);
-  color: var(--primary-color);
+  background: rgba(255, 107, 0, 0.1);
+  color: #FF6B00;
   padding: 0.5rem 1rem;
   border-radius: 20px;
   font-size: 0.875rem;
@@ -641,7 +656,7 @@ h2 {
 }
 
 .secao-header i {
-  color: var(--primary-color);
+  color: #FF6B00;
   transition: transform 0.3s ease;
   font-size: 1.1rem;
 }

@@ -1,5 +1,6 @@
 <template>
   <div class="login-container">
+    <img src="../../assets/logo-unifil.svg" alt="Logo Unifil" class="logo-unifil" />
     <div class="login-card">
       <h2>Login</h2>
       
@@ -175,16 +176,24 @@ const handleSubmit = async () => {
   min-height: 100vh;
   min-width: 100vw;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: #e0e0e0;
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
   overflow-y: auto;
+}
+
+.logo-unifil {
+  width: 300px;
+  height: auto;
+  margin-bottom: 3rem;
+  display: block;
 }
 
 .login-card {
@@ -312,7 +321,7 @@ input:focus {
 }
 
 button[type="submit"] {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #FF6B00 0%, #FF9E4F 100%);
   color: white;
   padding: 1rem;
   border: none;
@@ -331,7 +340,7 @@ button[type="submit"] {
 
 button[type="submit"]:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 5px 15px rgba(255, 107, 0, 0.4);
 }
 
 button[type="submit"]:active:not(:disabled) {
@@ -388,7 +397,7 @@ button[type="submit"]:disabled {
 }
 
 .register-link a {
-  color: #667eea;
+  color: #FF6B00;
   text-decoration: none;
   font-weight: 600;
   transition: all 0.3s ease;
@@ -402,7 +411,7 @@ button[type="submit"]:disabled {
   height: 2px;
   bottom: -2px;
   left: 0;
-  background-color: #667eea;
+  background-color: #FF6B00;
   transform: scaleX(0);
   transition: transform 0.3s ease;
 }
