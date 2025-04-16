@@ -616,12 +616,12 @@ h2 {
   gap: 1rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  background: linear-gradient(to right, rgba(255, 107, 0, 0.05), rgba(255, 107, 0, 0.02));
+  background: linear-gradient(to right, rgba(74, 85, 104, 0.05), rgba(74, 85, 104, 0.02));
   border-bottom: 2px solid var(--border-color);
 }
 
 .secao-header:hover {
-  background: linear-gradient(to right, rgba(255, 107, 0, 0.1), rgba(255, 107, 0, 0.05));
+  background: linear-gradient(to right, rgba(74, 85, 104, 0.1), rgba(74, 85, 104, 0.05));
 }
 
 .secao-header h3 {
@@ -640,13 +640,13 @@ h2 {
   display: block;
   width: 4px;
   height: 24px;
-  background: #FF6B00;
+  background: #4a5568;
   border-radius: 2px;
 }
 
 .contador {
-  background: rgba(255, 107, 0, 0.1);
-  color: #FF6B00;
+  background: rgba(74, 85, 104, 0.1);
+  color: #4a5568;
   padding: 0.5rem 1rem;
   border-radius: 20px;
   font-size: 0.875rem;
@@ -656,7 +656,7 @@ h2 {
 }
 
 .secao-header i {
-  color: #FF6B00;
+  color: #4a5568;
   transition: transform 0.3s ease;
   font-size: 1.1rem;
 }
@@ -947,7 +947,7 @@ textarea:focus {
   width: 40px;
   height: 40px;
   border: 4px solid #f3f3f3;
-  border-top: 4px solid #007bff;
+  border-top: 4px solid #4a5568;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 1rem;

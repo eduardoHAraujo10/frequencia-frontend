@@ -255,9 +255,10 @@ export default {
 }
 
 .header-section h2 {
+  color: #4a5568;
   font-size: 1.75rem;
-  font-weight: 700;
-  color: var(--text-color);
+  font-weight: 600;
+  margin: 0;
 }
 
 .data-atual {
@@ -278,18 +279,17 @@ export default {
 
 .card {
   background: white;
-  border-radius: 20px;
+  border-radius: 12px;
   padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
-  gap: 1rem;
-  box-shadow: 0 4px 12px var(--shadow-color);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  gap: 1.5rem;
+  transition: transform 0.3s ease;
 }
 
 .card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px var(--shadow-color);
 }
 
 .card-icon {
@@ -299,19 +299,19 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
+  background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+}
+
+.card-icon i {
   font-size: 1.5rem;
-  background: var(--primary-color);
   color: white;
 }
 
-.card-content {
-  flex: 1;
-}
-
 .card-content h3 {
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-  margin-bottom: 0.25rem;
+  color: #4a5568;
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
 }
 
 .card-value {

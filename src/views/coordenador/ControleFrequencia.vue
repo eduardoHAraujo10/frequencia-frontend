@@ -295,7 +295,7 @@ export default {
 }
 
 .frequencia-header h2 {
-  color: #1a237e;
+  color: #4a5568;
   font-size: 1.75rem;
   font-weight: 600;
   margin: 0 0 1.5rem 0;
@@ -333,13 +333,13 @@ select, input[type="date"] {
 
 select:focus, input[type="date"]:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #4a5568;
+  box-shadow: 0 0 0 3px rgba(74, 85, 104, 0.1);
   background-color: white;
 }
 
 .filter-button {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -356,7 +356,7 @@ select:focus, input[type="date"]:focus {
 
 .filter-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
+  box-shadow: 0 4px 12px rgba(74, 85, 104, 0.25);
 }
 
 .resumo-geral {
@@ -389,7 +389,7 @@ select:focus, input[type="date"]:focus {
 
 .resumo-item i {
   font-size: 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -426,7 +426,7 @@ table {
 
 th {
   background-color: #f8fafc;
-  color: #1a237e;
+  color: #4a5568;
   font-weight: 600;
   padding: 1rem;
   text-align: left;
@@ -469,7 +469,7 @@ tr:hover {
 }
 
 .action-button {
-  background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+  background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
   color: white;
   border: none;
   padding: 0.5rem 1rem;
@@ -484,7 +484,7 @@ tr:hover {
 
 .action-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(66, 153, 225, 0.2);
+  box-shadow: 0 4px 12px rgba(74, 85, 104, 0.2);
 }
 
 .loading-indicator {
@@ -499,7 +499,7 @@ tr:hover {
   width: 40px;
   height: 40px;
   border: 3px solid #e2e8f0;
-  border-top: 3px solid #667eea;
+  border-top: 3px solid #4a5568;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -544,8 +544,8 @@ tr:hover {
 }
 
 .page-button:hover:not(:disabled) {
-  border-color: #667eea;
-  color: #667eea;
+  border-color: #4a5568;
+  color: #4a5568;
 }
 
 .page-button:disabled {

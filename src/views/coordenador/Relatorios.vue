@@ -457,10 +457,10 @@ export default {
 }
 
 .header-actions h2 {
-  color: #1a237e;
+  color: #4a5568;
   font-size: 1.75rem;
   font-weight: 600;
-  margin: 0;
+  margin: 0 0 1.5rem 0;
 }
 
 .filtros-section {
@@ -472,10 +472,10 @@ export default {
 }
 
 .filtros-section h3 {
-  color: #1a237e;
+  color: #4a5568;
   font-size: 1.25rem;
   font-weight: 600;
-  margin: 0 0 1.5rem 0;
+  margin-bottom: 1rem;
 }
 
 .filtros-grid {
@@ -565,8 +565,8 @@ export default {
 .filtro-grupo input:focus,
 .filtro-grupo select:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #4a5568;
+  box-shadow: 0 0 0 3px rgba(74, 85, 104, 0.1);
   background-color: white;
 }
 
@@ -583,7 +583,7 @@ export default {
 }
 
 .resumo-section h3 {
-  color: #1a237e;
+  color: #4a5568;
   font-size: 1.25rem;
   font-weight: 600;
   margin: 0 0 1.5rem 0;
@@ -611,7 +611,7 @@ export default {
 
 .summary-card i {
   font-size: 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -642,7 +642,7 @@ export default {
 }
 
 .tabela-section h3 {
-  color: #1a237e;
+  color: #4a5568;
   font-size: 1.25rem;
   font-weight: 600;
   margin: 0 0 1.5rem 0;
@@ -660,7 +660,7 @@ table {
 
 th {
   background-color: #f8fafc;
-  color: #1a237e;
+  color: #4a5568;
   font-weight: 600;
   padding: 1rem;
   text-align: left;
@@ -705,25 +705,22 @@ tr:hover {
 }
 
 .export-button {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+  color: white;
   border: none;
+  padding: 0.75rem 1.5rem;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   transition: all 0.3s ease;
 }
 
-.export-button.pdf {
-  background: linear-gradient(135deg, #f56565 0%, #c53030 100%);
-  color: white;
-}
-
-.export-button.pdf:hover {
+.export-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(245, 101, 101, 0.25);
+  box-shadow: 0 4px 12px rgba(74, 85, 104, 0.25);
 }
 
 .loading-indicator {
@@ -738,7 +735,7 @@ tr:hover {
   width: 40px;
   height: 40px;
   border: 3px solid #e2e8f0;
-  border-top: 3px solid #667eea;
+  border-top: 3px solid #4a5568;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -850,7 +847,7 @@ tr:hover {
 }
 
 .registros-detalhados h4 {
-  color: #1a237e;
+  color: #4a5568;
   font-size: 1.1rem;
   margin-bottom: 0.5rem;
   font-weight: 600;
