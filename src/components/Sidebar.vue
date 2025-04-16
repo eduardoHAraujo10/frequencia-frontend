@@ -2,8 +2,7 @@
   <div v-if="authStore.isAuthenticated" class="sidebar" :class="{ 'sidebar-collapsed': isCollapsed }">
     <div class="sidebar-header">
       <h3 v-if="!isCollapsed">
-        <va-icon name="mdi-clock-check" />
-        Sistema de Ponto
+        <img src="@/assets/unifil.png" alt="Logo UNIFIL" class="logo-unifil" />
       </h3>
       <va-button @click="toggleSidebar" flat color="white">
         <va-icon :name="isCollapsed ? 'mdi-menu-unfold' : 'mdi-menu-fold'" />
@@ -220,71 +219,40 @@ onUnmounted(() => {
 }
 
 .sidebar-header {
-  padding: 1.25rem;
+  padding: 1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  min-height: 70px;
-  background: rgba(255, 255, 255, 0.1);
-  gap: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  min-height: 80px;
+  background: rgba(255, 255, 255, 0.05);
+  gap: 1rem;
   position: relative;
 }
 
 .sidebar-header h3 {
   margin: 0;
-  font-size: 1.2rem;
-  color: white;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex: 1;
-  min-width: 0;
-  padding-right: 55px;
-}
-
-.sidebar-header :deep(.va-button) {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  border-radius: 8px;
-  padding: 0.5rem;
-  flex-shrink: 0;
-  min-width: 40px;
-  height: 40px;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  position: absolute;
-  right: 0.5rem;
-  top: 50%;
-  transform: translateY(-50%);
+  padding-right: 40px;
 }
 
-.sidebar-header :deep(.va-button:hover) {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.sidebar-header :deep(.va-icon) {
-  font-size: 1.5rem;
-}
-
-.sidebar-collapsed .sidebar-header :deep(.va-icon) {
-  transform: rotate(180deg);
+.logo-unifil {
+  width: auto;
+  height: 40px;
+  object-fit: contain;
 }
 
 .user-info {
-  padding: 1.5rem 1rem;
+  padding: 1.25rem 1rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.75rem;
-  background: rgba(255, 255, 255, 0.05);
-  margin-bottom: 1rem;
+  background: rgba(0, 0, 0, 0.1);
 }
 
 .user-details {
@@ -294,9 +262,9 @@ onUnmounted(() => {
 
 .user-name {
   margin: 0.5rem 0;
-  font-weight: 600;
+  font-weight: 500;
   color: white;
-  font-size: 1.1rem;
+  font-size: 1rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -305,10 +273,10 @@ onUnmounted(() => {
 
 .menu-container {
   flex: 1;
-  padding: 1rem 0.5rem;
+  padding: 1.25rem 0.75rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.375rem;
   overflow-y: auto;
 }
 
@@ -319,23 +287,19 @@ onUnmounted(() => {
 }
 
 .menu-item :deep(.va-button) {
-  height: 3.5rem;
+  height: 3.25rem;
   width: 100%;
   border-radius: 8px;
   transition: all 0.2s ease;
-  color: #2B3674;
-  background: rgba(255, 255, 255, 0.95);
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
   margin-bottom: 4px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(43, 54, 116, 0.1);
+  border: none;
 }
 
 .menu-item :deep(.va-button:hover) {
-  background: rgba(255, 255, 255, 1);
-  color: #2B3674;
+  background: rgba(255, 255, 255, 0.2);
   transform: translateX(5px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  border-color: rgba(43, 54, 116, 0.2);
 }
 
 .menu-item :deep(.va-button__content) {
@@ -368,21 +332,17 @@ onUnmounted(() => {
   padding: 1rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   margin-top: auto;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.1);
 }
 
 .sidebar-footer :deep(.va-button) {
-  background: rgba(255, 255, 255, 0.95);
-  color: #2B3674;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(43, 54, 116, 0.1);
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: none;
 }
 
 .sidebar-footer :deep(.va-button:hover) {
-  background: rgba(255, 255, 255, 1);
-  color: #2B3674;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  border-color: rgba(43, 54, 116, 0.2);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .sidebar-collapsed .menu-item :deep(.va-button__content) {
@@ -517,13 +477,11 @@ onUnmounted(() => {
 }
 
 .menu-item :deep(.va-button.active) {
-  background: rgba(255, 255, 255, 1);
-  color: #2B3674;
-  font-weight: 600;
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+  font-weight: 500;
   transform: translateX(8px);
   position: relative;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  border-color: rgba(43, 54, 116, 0.3);
 }
 
 .menu-item :deep(.va-button.active)::before {
@@ -532,7 +490,7 @@ onUnmounted(() => {
   left: 0;
   top: 0;
   height: 100%;
-  width: 4px;
+  width: 3px;
   background: white;
   border-radius: 0 4px 4px 0;
 }
@@ -559,5 +517,12 @@ onUnmounted(() => {
 
 .user-info:hover :deep(.va-avatar) {
   transform: scale(1.05);
+}
+
+.logo-unifil {
+  width: 100%;
+  max-width: 200px;
+  height: auto;
+  align-items: center;
 }
 </style> 
