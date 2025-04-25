@@ -126,6 +126,7 @@
 <script>
 import { ref, computed } from 'vue';
 import axios from 'axios';
+import { formatTime, formatDate, formatFullDate } from '../../utils/dateUtils';
 
 export default {
   name: 'HistoricoPresenca',
@@ -274,22 +275,11 @@ export default {
     });
 
     const formatarData = (data) => {
-      if (!data) return '-';
-      return new Date(data).toLocaleDateString('pt-BR', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
+      return formatFullDate(data);
     };
 
     const formatarHora = (hora) => {
-      if (!hora) return '-';
-      const data = new Date(hora);
-      return data.toLocaleTimeString('pt-BR', {
-        hour: '2-digit',
-        minute: '2-digit'
-      });
+      return formatTime(hora);
     };
 
     // Carregar registros iniciais

@@ -49,6 +49,32 @@
       </form>
     </va-modal>
 
+    <!-- Modal de Edição de Matrícula -->
+    <va-modal v-model="showEditModal" :title="'Editar Matrícula'" hide-default-actions>
+      <form @submit.prevent="handleEditSubmit" class="register-form">
+        <div class="form-group">
+          <va-input
+            v-model="editFormData.matricula"
+            label="Nova Matrícula"
+            :error="editErrors.matricula"
+          />
+        </div>
+
+        <div class="form-actions">
+          <va-button flat @click="showEditModal = false">
+            Cancelar
+          </va-button>
+          <va-button @click="handleEditSubmit">
+            Salvar
+          </va-button>
+        </div>
+
+        <div v-if="editMessage" :class="['message', editMessageType]">
+          {{ editMessage }}
+        </div>
+      </form>
+    </va-modal>
+
     <!-- Lista de Alunos -->
     <div class="alunos-list">
       <div class="search-bar">
@@ -85,6 +111,9 @@
                 <button class="action-button view" @click="verRegistros(aluno)">
                   <i class="fas fa-list"></i>
                 </button>
+                <button class="action-button edit" @click="abrirModalEdicao(aluno)">
+                  <i class="fas fa-edit"></i>
+                </button>
                 <button class="action-button status" @click="alterarStatus(aluno)">
                   <i :class="['fas', aluno.ativo ? 'fa-ban' : 'fa-check']"></i>
                 </button>
@@ -116,12 +145,16 @@ export default {
   setup() {
     const router = useRouter();
     const showModal = ref(false);
+    const showEditModal = ref(false);
     const loading = ref(false);
     const message = ref('');
     const messageType = ref('');
+    const editMessage = ref('');
+    const editMessageType = ref('');
     const showPassword = ref(false);
     const searchTerm = ref('');
     const alunos = ref([]);
+    const alunoSelecionado = ref(null);
 
     const formData = ref({
       username: '',
@@ -135,6 +168,14 @@ export default {
       username: '',
       password: '',
       email: '',
+      matricula: ''
+    });
+
+    const editFormData = ref({
+      matricula: ''
+    });
+
+    const editErrors = ref({
       matricula: ''
     });
 
@@ -318,17 +359,61 @@ export default {
       router.push(`/aluno/${aluno.id}/frequencia`);
     };
 
+    const abrirModalEdicao = (aluno) => {
+      alunoSelecionado.value = aluno;
+      editFormData.value.matricula = aluno.matricula;
+      showEditModal.value = true;
+    };
+
+    const handleEditSubmit = async () => {
+      if (!editFormData.value.matricula) {
+        editErrors.value.matricula = 'A matrícula é obrigatória';
+        return;
+      }
+
+      try {
+        const response = await axios.put(
+          `http://localhost:8000/api/v1/alunos/${alunoSelecionado.value.id}/matricula`,
+          { matricula: editFormData.value.matricula },
+          {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          }
+        );
+
+        if (response.data.status === 'success') {
+          editMessage.value = 'Matrícula atualizada com sucesso!';
+          editMessageType.value = 'success';
+          await carregarAlunos();
+          setTimeout(() => {
+            showEditModal.value = false;
+            editFormData.value.matricula = '';
+            editMessage.value = '';
+          }, 2000);
+        }
+      } catch (err) {
+        editMessage.value = err.response?.data?.message || 'Erro ao atualizar matrícula';
+        editMessageType.value = 'error';
+      }
+    };
+
     // Carregar alunos ao montar o componente
     carregarAlunos();
 
     return {
       showModal,
+      showEditModal,
       loading,
       message,
       messageType,
+      editMessage,
+      editMessageType,
       showPassword,
       formData,
+      editFormData,
       errors,
+      editErrors,
       hasErrors,
       searchTerm,
       alunos,
@@ -337,7 +422,9 @@ export default {
       handleSubmit,
       carregarAlunos,
       alterarStatus,
-      verRegistros
+      verRegistros,
+      abrirModalEdicao,
+      handleEditSubmit
     };
   }
 };
@@ -488,6 +575,10 @@ tr:hover {
 
 .action-button.view {
   background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+}
+
+.action-button.edit {
+  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
 }
 
 .action-button.status {

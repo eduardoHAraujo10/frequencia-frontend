@@ -14,9 +14,10 @@
             <div class="solicitacao-header">
               <div class="aluno-info">
                 <i class="fas fa-user"></i>
-                <span>{{ item.aluno_nome }}</span>
+                <span class="nome-aluno">{{ item.aluno?.nome || item.aluno_nome }}</span>
+                <span class="matricula">({{ item.aluno?.matricula || item.matricula }})</span>
               </div>
-              <div class="tipo-badge">
+              <div class="tipo-badge" :class="item.tipo">
                 {{ item.tipo === 'alerta' ? 'Alerta de Esquecimento' : 'Ajuste de Horário' }}
               </div>
               <span :class="['status-badge', item.status]">{{ traduzirStatus(item.status) }}</span>
@@ -29,12 +30,16 @@
                   <span class="value">{{ formatarData(item.data) }}</span>
                 </div>
                 <div class="info-row">
-                  <span class="label">Horário Previsto:</span>
-                  <span class="value">{{ formatarHora(item.horario_previsto) }}</span>
+                  <span class="label">Horário de Entrada:</span>
+                  <span class="value">{{ formatarHora(item.horario_entrada) || 'Não informado' }}</span>
                 </div>
                 <div class="info-row">
-                  <span class="label">Tipo:</span>
-                  <span class="value">{{ item.tipo_registro === 'entrada' ? 'Entrada' : 'Saída' }}</span>
+                  <span class="label">Horário de Saída:</span>
+                  <span class="value">{{ formatarHora(item.horario_saida) || 'Não informado' }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="label">Justificativa:</span>
+                  <p class="justificativa">{{ item.justificativa }}</p>
                 </div>
               </template>
               <template v-else>
@@ -47,10 +52,6 @@
                   <span class="value">{{ formatarDataHora(item.horario_solicitado) }}</span>
                 </div>
               </template>
-              <div class="info-row">
-                <span class="label">Justificativa:</span>
-                <p class="justificativa">{{ item.justificativa }}</p>
-              </div>
             </div>
 
             <div v-if="item.status === 'pendente'" class="solicitacao-actions">
@@ -60,21 +61,26 @@
                   v-model="item.observacao_coordenador" 
                   placeholder="Adicione uma observação (opcional)"
                   rows="2"
+                  :disabled="loading"
                 ></textarea>
               </div>
               <div class="action-buttons">
                 <button 
-                  @click="responderSolicitacao(item)"
+                  @click="responderSolicitacao(item, true)"
                   class="btn-aprovar"
+                  :disabled="loading"
                 >
-                  <i class="fas fa-check"></i>
+                  <span v-if="loading" class="spinner"></span>
+                  <i v-else class="fas fa-check"></i>
                   Aprovar
                 </button>
                 <button 
                   @click="responderSolicitacao(item, false)"
                   class="btn-rejeitar"
+                  :disabled="loading"
                 >
-                  <i class="fas fa-times"></i>
+                  <span v-if="loading" class="spinner"></span>
+                  <i v-else class="fas fa-times"></i>
                   Rejeitar
                 </button>
               </div>
@@ -86,7 +92,7 @@
                 <p>{{ item.observacao_coordenador }}</p>
               </div>
               <div class="feedback-info">
-                <span>Respondido em: {{ formatarDataHora(item.data_resposta || item.data_aprovacao) }}</span>
+                <span>Respondido em: {{ formatarDataHora(item.data_aprovacao || item.data_resposta) }}</span>
               </div>
             </div>
           </div>
@@ -106,9 +112,10 @@
             <div class="solicitacao-header">
               <div class="aluno-info">
                 <i class="fas fa-user"></i>
-                <span>{{ item.aluno_nome }}</span>
+                <span class="nome-aluno">{{ item.aluno?.nome || item.aluno_nome }}</span>
+                <span class="matricula">({{ item.aluno?.matricula || item.matricula }})</span>
               </div>
-              <div class="tipo-badge">
+              <div class="tipo-badge" :class="item.tipo">
                 {{ item.tipo === 'alerta' ? 'Alerta de Esquecimento' : 'Ajuste de Horário' }}
               </div>
               <span :class="['status-badge', item.status]">{{ traduzirStatus(item.status) }}</span>
@@ -121,12 +128,16 @@
                   <span class="value">{{ formatarData(item.data) }}</span>
                 </div>
                 <div class="info-row">
-                  <span class="label">Horário Previsto:</span>
-                  <span class="value">{{ formatarHora(item.horario_previsto) }}</span>
+                  <span class="label">Horário de Entrada:</span>
+                  <span class="value">{{ formatarHora(item.horario_entrada) || 'Não informado' }}</span>
                 </div>
                 <div class="info-row">
-                  <span class="label">Tipo:</span>
-                  <span class="value">{{ item.tipo_registro === 'entrada' ? 'Entrada' : 'Saída' }}</span>
+                  <span class="label">Horário de Saída:</span>
+                  <span class="value">{{ formatarHora(item.horario_saida) || 'Não informado' }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="label">Justificativa:</span>
+                  <p class="justificativa">{{ item.justificativa }}</p>
                 </div>
               </template>
               <template v-else>
@@ -139,10 +150,6 @@
                   <span class="value">{{ formatarDataHora(item.horario_solicitado) }}</span>
                 </div>
               </template>
-              <div class="info-row">
-                <span class="label">Justificativa:</span>
-                <p class="justificativa">{{ item.justificativa }}</p>
-              </div>
             </div>
 
             <div v-if="item.status === 'pendente'" class="solicitacao-actions">
@@ -152,25 +159,30 @@
                   v-model="item.observacao_coordenador" 
                   placeholder="Adicione uma observação (opcional)"
                   rows="2"
+                  :disabled="loading"
                 ></textarea>
               </div>
               <div class="action-buttons">
                 <button 
-                  @click="responderSolicitacao(item)"
+                  @click="responderSolicitacao(item, true)"
                   class="btn-aprovar"
+                  :disabled="loading"
                 >
-                  <i class="fas fa-check"></i>
+                  <span v-if="loading" class="spinner"></span>
+                  <i v-else class="fas fa-check"></i>
                   Aprovar
                 </button>
                 <button 
                   @click="responderSolicitacao(item, false)"
                   class="btn-rejeitar"
+                  :disabled="loading"
                 >
-                  <i class="fas fa-times"></i>
+                  <span v-if="loading" class="spinner"></span>
+                  <i v-else class="fas fa-times"></i>
                   Rejeitar
                 </button>
               </div>
-      </div>
+            </div>
 
             <div v-else class="solicitacao-feedback">
               <div v-if="item.observacao_coordenador" class="observacao">
@@ -178,7 +190,7 @@
                 <p>{{ item.observacao_coordenador }}</p>
               </div>
               <div class="feedback-info">
-                <span>Respondido em: {{ formatarDataHora(item.data_resposta || item.data_aprovacao) }}</span>
+                <span>Respondido em: {{ formatarDataHora(item.data_aprovacao) }}</span>
               </div>
             </div>
           </div>
@@ -198,9 +210,10 @@
             <div class="solicitacao-header">
             <div class="aluno-info">
               <i class="fas fa-user"></i>
-                <span>{{ item.aluno_nome }}</span>
+                <span class="nome-aluno">{{ item.aluno?.nome || item.aluno_nome }}</span>
+                <span class="matricula">({{ item.aluno?.matricula || item.matricula }})</span>
               </div>
-              <div class="tipo-badge">
+              <div class="tipo-badge" :class="item.tipo">
                 {{ item.tipo === 'alerta' ? 'Alerta de Esquecimento' : 'Ajuste de Horário' }}
               </div>
               <span :class="['status-badge', item.status]">{{ traduzirStatus(item.status) }}</span>
@@ -213,12 +226,12 @@
                   <span class="value">{{ formatarData(item.data) }}</span>
             </div>
             <div class="info-row">
-              <span class="label">Horário Previsto:</span>
-                  <span class="value">{{ formatarHora(item.horario_previsto) }}</span>
+              <span class="label">Horário de Entrada:</span>
+                  <span class="value">{{ formatarHora(item.horario_entrada) || 'Não informado' }}</span>
             </div>
             <div class="info-row">
-              <span class="label">Tipo:</span>
-                  <span class="value">{{ item.tipo_registro === 'entrada' ? 'Entrada' : 'Saída' }}</span>
+              <span class="label">Horário de Saída:</span>
+                  <span class="value">{{ formatarHora(item.horario_saida) || 'Não informado' }}</span>
                 </div>
               </template>
               <template v-else>
@@ -244,21 +257,26 @@
                   v-model="item.observacao_coordenador" 
                 placeholder="Adicione uma observação (opcional)"
                 rows="2"
+                :disabled="loading"
               ></textarea>
             </div>
             <div class="action-buttons">
               <button 
-                  @click="responderSolicitacao(item)"
+                  @click="responderSolicitacao(item, true)"
                 class="btn-aprovar"
+                :disabled="loading"
               >
-                <i class="fas fa-check"></i>
+                <span v-if="loading" class="spinner"></span>
+                <i v-else class="fas fa-check"></i>
                 Aprovar
               </button>
               <button 
                   @click="responderSolicitacao(item, false)"
                 class="btn-rejeitar"
+                :disabled="loading"
               >
-                <i class="fas fa-times"></i>
+                <span v-if="loading" class="spinner"></span>
+                <i v-else class="fas fa-times"></i>
                 Rejeitar
               </button>
             </div>
@@ -270,7 +288,7 @@
                 <p>{{ item.observacao_coordenador }}</p>
             </div>
             <div class="feedback-info">
-                <span>Respondido em: {{ formatarDataHora(item.data_resposta || item.data_aprovacao) }}</span>
+                <span>Respondido em: {{ formatarDataHora(item.data_aprovacao) }}</span>
               </div>
             </div>
           </div>
@@ -290,9 +308,10 @@
             <div class="solicitacao-header">
               <div class="aluno-info">
                 <i class="fas fa-user"></i>
-                <span>{{ item.aluno_nome }}</span>
+                <span class="nome-aluno">{{ item.aluno?.nome || item.aluno_nome }}</span>
+                <span class="matricula">({{ item.aluno?.matricula || item.matricula }})</span>
               </div>
-              <div class="tipo-badge">
+              <div class="tipo-badge" :class="item.tipo">
                 {{ item.tipo === 'alerta' ? 'Alerta de Esquecimento' : 'Ajuste de Horário' }}
               </div>
               <span :class="['status-badge', item.status]">{{ traduzirStatus(item.status) }}</span>
@@ -305,12 +324,16 @@
                   <span class="value">{{ formatarData(item.data) }}</span>
                 </div>
                 <div class="info-row">
-                  <span class="label">Horário Previsto:</span>
-                  <span class="value">{{ formatarHora(item.horario_previsto) }}</span>
+                  <span class="label">Horário de Entrada:</span>
+                  <span class="value">{{ formatarHora(item.horario_entrada) || 'Não informado' }}</span>
                 </div>
                 <div class="info-row">
-                  <span class="label">Tipo:</span>
-                  <span class="value">{{ item.tipo_registro === 'entrada' ? 'Entrada' : 'Saída' }}</span>
+                  <span class="label">Horário de Saída:</span>
+                  <span class="value">{{ formatarHora(item.horario_saida) || 'Não informado' }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="label">Justificativa:</span>
+                  <p class="justificativa">{{ item.justificativa }}</p>
                 </div>
               </template>
               <template v-else>
@@ -323,11 +346,7 @@
                   <span class="value">{{ formatarDataHora(item.horario_solicitado) }}</span>
                 </div>
               </template>
-              <div class="info-row">
-                <span class="label">Justificativa:</span>
-                <p class="justificativa">{{ item.justificativa }}</p>
-        </div>
-      </div>
+            </div>
 
             <div v-if="item.status === 'pendente'" class="solicitacao-actions">
               <div class="observacao-field">
@@ -336,23 +355,28 @@
                   v-model="item.observacao_coordenador" 
                   placeholder="Adicione uma observação (opcional)"
                   rows="2"
+                  :disabled="loading"
                 ></textarea>
               </div>
               <div class="action-buttons">
         <button 
-                  @click="responderSolicitacao(item)"
+                  @click="responderSolicitacao(item, true)"
                   class="btn-aprovar"
+                  :disabled="loading"
         >
-                  <i class="fas fa-check"></i>
+                  <span v-if="loading" class="spinner"></span>
+                  <i v-else class="fas fa-check"></i>
                   Aprovar
-        </button>
+                </button>
         <button 
                   @click="responderSolicitacao(item, false)"
                   class="btn-rejeitar"
+                  :disabled="loading"
         >
-                  <i class="fas fa-times"></i>
+                  <span v-if="loading" class="spinner"></span>
+                  <i v-else class="fas fa-times"></i>
                   Rejeitar
-        </button>
+                </button>
               </div>
             </div>
 
@@ -362,7 +386,7 @@
                 <p>{{ item.observacao_coordenador }}</p>
               </div>
               <div class="feedback-info">
-                <span>Respondido em: {{ formatarDataHora(item.data_resposta || item.data_aprovacao) }}</span>
+                <span>Respondido em: {{ formatarDataHora(item.data_aprovacao) }}</span>
               </div>
             </div>
           </div>
@@ -433,11 +457,23 @@ export default {
         ]);
 
         const alertas = alertasResponse.data.status === 'success' 
-          ? alertasResponse.data.data.alertas.map(a => ({ ...a, tipo: 'alerta' }))
+          ? alertasResponse.data.data.alertas.map(a => ({
+              ...a,
+              tipo: 'alerta',
+              horario_entrada: a.horario_entrada || null,
+              horario_saida: a.horario_saida || null,
+              aluno_nome: a.aluno_nome || 'Nome não disponível',
+              matricula: a.aluno_matricula || 'Matrícula não disponível'
+            }))
           : [];
 
         const ajustes = ajustesResponse.data.status === 'success'
-          ? ajustesResponse.data.data.solicitacoes.map(s => ({ ...s, tipo: 'ajuste' }))
+          ? ajustesResponse.data.data.solicitacoes.map(s => ({
+              ...s,
+              tipo: 'ajuste',
+              aluno_nome: s.aluno_nome || 'Nome não disponível',
+              matricula: s.aluno_matricula || 'Matrícula não disponível'
+            }))
           : [];
 
         // Combina e ordena por data de criação
@@ -455,47 +491,74 @@ export default {
     const responderSolicitacao = async (item, aprovar = true) => {
       const status = aprovar ? 'aprovado' : 'rejeitado';
       const endpoint = item.tipo === 'alerta'
-        ? `alertas-esquecimento/${item.id}/responder`
-        : `solicitacoes-ajuste/${item.id}/responder`;
+        ? `http://localhost:8000/api/v1/coordenador/alertas-esquecimento/${item.id}/responder`
+        : `http://localhost:8000/api/v1/coordenador/solicitacoes-ajuste/${item.id}/responder`;
 
       try {
+        loading.value = true;
         const response = await axios.post(
-          `http://localhost:8000/api/v1/coordenador/${endpoint}`,
+          endpoint,
           {
-          status,
-            observacao_coordenador: item.observacao_coordenador
+            status,
+            observacao_coordenador: item.observacao_coordenador || ''
           },
           {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            headers: { 
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+              'Content-Type': 'application/json'
+            }
           }
         );
 
         if (response.data.status === 'success') {
           successMessage.value = aprovar 
-            ? 'Solicitação aprovada com sucesso! O registro foi atualizado.' 
+            ? 'Solicitação aprovada com sucesso!' 
             : 'Solicitação rejeitada com sucesso!';
           
+          // Atualiza o item na lista
+          const index = solicitacoes.value.findIndex(s => s.id === item.id);
+          if (index !== -1) {
+            solicitacoes.value[index] = {
+              ...solicitacoes.value[index],
+              status,
+              observacao_coordenador: item.observacao_coordenador || "",
+              data_aprovacao: new Date().toISOString()
+            };
+          }
+
           // Limpa a mensagem após 3 segundos
           setTimeout(() => {
             successMessage.value = '';
           }, 3000);
 
+          // Recarrega os dados
           await carregarSolicitacoes();
         } else {
-          error.value = response.data.message || 'Erro ao responder solicitação';
+          throw new Error(response.data.message || 'Erro ao responder solicitação');
         }
       } catch (err) {
-        error.value = 'Erro ao responder solicitação. Tente novamente.';
-        console.error(err);
+        console.error('Erro ao responder solicitação:', err);
+        error.value = err.response?.data?.message || 'Erro ao responder solicitação. Tente novamente.';
+        setTimeout(() => {
+          error.value = '';
+        }, 3000);
+      } finally {
+        loading.value = false;
       }
     };
 
     const formatarData = (data) => {
       if (!data) return '';
       try {
+        // Criar uma nova data no fuso horário local
         const date = new Date(data);
-        if (isNaN(date.getTime())) return '';
-        return date.toLocaleDateString('pt-BR');
+        // Ajustar para o fuso horário local
+        date.setMinutes(date.getMinutes() + date.getTimezoneOffset());
+        return date.toLocaleDateString('pt-BR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        });
       } catch (error) {
         console.error('Erro ao formatar data:', error);
         return '';
@@ -505,11 +568,22 @@ export default {
     const formatarHora = (hora) => {
       if (!hora) return '';
       try {
+        // Se já estiver no formato HH:mm ou HH:mm:ss, retorna apenas HH:mm
+        if (typeof hora === 'string') {
+          // Remove qualquer parte de data, mantendo apenas o horário
+          const match = hora.match(/\d{2}:\d{2}(:\d{2})?/);
+          if (match) {
+            return match[0].substring(0, 5);
+          }
+        }
+        
+        // Se for uma data completa, extrai apenas o horário
         const date = new Date(hora);
-        if (isNaN(date.getTime())) return '';
-        const horas = String(date.getHours()).padStart(2, '0');
-        const minutos = String(date.getMinutes()).padStart(2, '0');
-        return `${horas}:${minutos}`;
+        if (!isNaN(date.getTime())) {
+          return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+        }
+        
+        return '';
       } catch (error) {
         console.error('Erro ao formatar hora:', error);
         return '';
@@ -521,7 +595,14 @@ export default {
       try {
         const date = new Date(dataHora);
         if (isNaN(date.getTime())) return '';
-        return date.toLocaleString('pt-BR');
+        
+        const dia = String(date.getDate()).padStart(2, '0');
+        const mes = String(date.getMonth() + 1).padStart(2, '0');
+        const ano = date.getFullYear();
+        const hora = String(date.getHours()).padStart(2, '0');
+        const minutos = String(date.getMinutes()).padStart(2, '0');
+        
+        return `${dia}/${mes}/${ano} ${hora}:${minutos}`;
       } catch (error) {
         console.error('Erro ao formatar data e hora:', error);
         return '';
@@ -703,6 +784,7 @@ h2 {
   align-items: center;
   gap: 0.5rem;
   flex: 1;
+  flex-wrap: wrap;
 }
 
 .aluno-info i {
@@ -710,9 +792,14 @@ h2 {
   font-size: 1.25rem;
 }
 
-.aluno-info span {
+.aluno-info .nome-aluno {
   font-weight: 600;
   color: var(--text-color);
+}
+
+.aluno-info .matricula {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
 }
 
 .tipo-badge {
@@ -814,14 +901,14 @@ textarea:focus {
 .action-buttons {
   display: flex;
   gap: 1rem;
+  margin-top: 1rem;
 }
 
 .action-buttons button {
   flex: 1;
   padding: 0.75rem;
   border: none;
-  border-radius: 12px;
-  font-size: 0.875rem;
+  border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
   display: flex;
@@ -831,30 +918,33 @@ textarea:focus {
   transition: all 0.2s ease;
 }
 
+.action-buttons button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 .btn-aprovar {
-  background-color: var(--primary-color);
+  background-color: #22c55e;
   color: white;
 }
 
-.btn-aprovar:hover {
-  background-color: #3612D9;
-  transform: translateY(-1px);
+.btn-aprovar:hover:not(:disabled) {
+  background-color: #16a34a;
 }
 
 .btn-rejeitar {
-  background-color: #FF3B3B;
+  background-color: #ef4444;
   color: white;
 }
 
-.btn-rejeitar:hover {
-  background-color: #E63535;
-  transform: translateY(-1px);
+.btn-rejeitar:hover:not(:disabled) {
+  background-color: #dc2626;
 }
 
 .solicitacao-feedback {
   padding: 1rem;
-  background: white;
-  border-top: 1px solid var(--border-color);
+  background-color: #f8fafc;
+  border-top: 1px solid #e2e8f0;
 }
 
 .observacao {
@@ -876,8 +966,9 @@ textarea:focus {
 }
 
 .feedback-info {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: #64748b;
 }
 
 @media (max-width: 1200px) {
@@ -944,13 +1035,15 @@ textarea:focus {
 }
 
 .spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #4a5568;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #ffffff;
+  border-top: 2px solid transparent;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin: 0 auto 1rem;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 8px;
 }
 
 @keyframes spin {

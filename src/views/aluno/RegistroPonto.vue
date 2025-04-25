@@ -1,5 +1,10 @@
 <template>
   <div class="registro-ponto-container">
+    <!-- Toast para mensagens -->
+    <div v-if="toastMessage" :class="['toast', toastType]" @click="fecharToast">
+      {{ toastMessage }}
+    </div>
+
     <!-- Modal de Solicitação de Ajuste -->
     <div v-if="showModal" class="modal-overlay">
       <div class="modal-content">
@@ -8,7 +13,7 @@
         <div class="form-group">
           <label>Registro Atual:</label>
           <div class="registro-atual">
-            <span>{{ formatDate(registroParaAjuste?.horario) }} - {{ formatTime(registroParaAjuste?.horario) }}</span>
+            <span>{{ formatDateTime(registroParaAjuste?.horario) }} - {{ formatTime(registroParaAjuste?.horario) }}</span>
             <span :class="['registro-tipo', registroParaAjuste?.tipo.toLowerCase()]">
               {{ registroParaAjuste?.tipo === 'entrada' ? 'Entrada' : 'Saída' }}
             </span>
@@ -53,31 +58,56 @@
       <div class="modal-content">
         <h3>Registrar Esquecimento de Ponto</h3>
         
-        <div class="form-group">
-          <label>Data:</label>
-          <input 
-            type="date" 
-            v-model="alertaData"
-            class="form-control"
-            :max="hoje"
-          >
+        <div class="form-row">
+          <div class="form-group">
+            <label>Data:</label>
+            <input 
+              type="date" 
+              v-model="alertaData"
+              class="form-control"
+              :max="hoje"
+            >
+          </div>
         </div>
 
         <div class="form-group">
-          <label>Horário Previsto:</label>
-          <input 
-            type="time" 
-            v-model="alertaHorario"
-            class="form-control"
-          >
-        </div>
-
-        <div class="form-group">
-          <label>Tipo:</label>
-          <select v-model="alertaTipo" class="form-control">
-            <option value="entrada">Entrada</option>
-            <option value="saida">Saída</option>
-          </select>
+          <label>Tipos de Registro:</label>
+          <div class="tipo-selector">
+            <div class="tipo-column">
+              <button 
+                @click="toggleTipoRegistro('entrada')"
+                :class="['tipo-button', { active: tiposRegistroSelecionados.includes('entrada') }]"
+              >
+                <i class="fas fa-sign-in-alt"></i>
+                Entrada
+              </button>
+              <div v-if="tiposRegistroSelecionados.includes('entrada')" class="horario-input">
+                <label>Horário:</label>
+                <input 
+                  type="time" 
+                  v-model="alertaHorarioEntrada"
+                  class="form-control time-input"
+                >
+              </div>
+            </div>
+            <div class="tipo-column">
+              <button 
+                @click="toggleTipoRegistro('saida')"
+                :class="['tipo-button', { active: tiposRegistroSelecionados.includes('saida') }]"
+              >
+                <i class="fas fa-sign-out-alt"></i>
+                Saída
+              </button>
+              <div v-if="tiposRegistroSelecionados.includes('saida')" class="horario-input">
+                <label>Horário:</label>
+                <input 
+                  type="time" 
+                  v-model="alertaHorarioSaida"
+                  class="form-control time-input"
+                >
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="form-group">
@@ -94,7 +124,7 @@
           <button 
             @click="enviarAlertaEsquecimento" 
             class="btn-primary"
-            :disabled="!alertaData || !alertaHorario || !alertaTipo || !alertaJustificativa || loadingAlerta"
+            :disabled="!podeEnviarAlerta || loadingAlerta"
           >
             <span v-if="loadingAlerta" class="spinner"></span>
             {{ loadingAlerta ? 'Enviando...' : 'Enviar Alerta' }}
@@ -189,7 +219,7 @@
         <div class="alertas-section">
           <div class="card">
             <div class="card-header">
-              <h3>Último Alerta de Esquecimento</h3>
+              <h3>Último Alerta</h3>
               <router-link to="/historico-alertas" class="btn-historico">
                 <i class="fas fa-history"></i>
                 Ver Todos
@@ -202,24 +232,15 @@
             </div>
 
             <div v-else-if="!alertaMaisRecente" class="no-data">
-              Nenhum alerta de esquecimento registrado.
+              Nenhuma solicitação registrada.
             </div>
 
             <div v-else class="alertas-list">
               <div class="alerta-card">
                 <div class="alerta-header">
-                  <div class="alerta-data">
-                    <i class="fas fa-calendar"></i>
-                    {{ formatarData(alertaMaisRecente.data) }}
-                  </div>
-                  <div class="alerta-horario">
-                    <i class="fas fa-clock"></i>
-                    {{ formatTime(alertaMaisRecente.horario_previsto) }}
-                  </div>
-                  <div class="alerta-tipo">
-                    <i class="fas fa-sign-in-alt" v-if="alertaMaisRecente.tipo === 'entrada'"></i>
-                    <i class="fas fa-sign-out-alt" v-else></i>
-                    {{ alertaMaisRecente.tipo === 'entrada' ? 'Entrada' : 'Saída' }}
+                  <div class="tipo-badge" :class="alertaMaisRecente.tipoSolicitacao">
+                    <i :class="alertaMaisRecente.tipoSolicitacao === 'alerta' ? 'fas fa-exclamation-circle' : 'fas fa-clock'"></i>
+                    {{ alertaMaisRecente.tipoSolicitacao === 'alerta' ? 'Alerta de Esquecimento' : 'Ajuste de Horário' }}
                   </div>
                   <div class="alerta-status" :class="alertaMaisRecente.status">
                     {{ traduzirStatus(alertaMaisRecente.status) }}
@@ -227,14 +248,60 @@
                 </div>
 
                 <div class="alerta-body">
+                  <template v-if="alertaMaisRecente.tipoSolicitacao === 'alerta'">
+                    <div class="alerta-data">
+                      <i class="fas fa-calendar"></i>
+                      {{ formatFullDate(alertaMaisRecente.data) }}
+                    </div>
+                    <div class="alerta-horarios">
+                      <template v-if="alertaMaisRecente.horario_entrada">
+                        <div class="horario-item entrada">
+                          <i class="fas fa-sign-in-alt"></i>
+                          <span>Entrada: {{ formatTime(alertaMaisRecente.horario_entrada) }}</span>
+                        </div>
+                      </template>
+                      <template v-if="alertaMaisRecente.horario_saida">
+                        <div class="horario-item saida">
+                          <i class="fas fa-sign-out-alt"></i>
+                          <span>Saída: {{ formatTime(alertaMaisRecente.horario_saida) }}</span>
+                        </div>
+                      </template>
+                    </div>
+                  </template>
+
+                  <template v-else>
+                    <div class="alerta-horarios">
+                      <div class="horario-item atual">
+                        <i class="fas fa-clock"></i>
+                        <span>Horário Atual: {{ formatDateTime(alertaMaisRecente.horario_atual) }}</span>
+                      </div>
+                      <div class="horario-item solicitado">
+                        <i class="fas fa-clock"></i>
+                        <span>Horário Solicitado: {{ formatDateTime(alertaMaisRecente.horario_solicitado) }}</span>
+                      </div>
+                    </div>
+                  </template>
+
                   <strong>Justificativa:</strong>
                   <p>{{ alertaMaisRecente.justificativa }}</p>
                 </div>
 
-                <div v-if="alertaMaisRecente.observacao_coordenador" class="alerta-feedback">
-                  <strong>Feedback do Coordenador:</strong>
-                  <p>{{ alertaMaisRecente.observacao_coordenador }}</p>
-                </div>
+                <template v-if="alertaMaisRecente.status !== 'pendente'">
+                  <div class="alerta-feedback">
+                    <div class="coordenador-info" v-if="alertaMaisRecente.coordenador_nome">
+                      <i class="fas fa-user-tie"></i>
+                      <span>Respondido por: {{ alertaMaisRecente.coordenador_nome }}</span>
+                    </div>
+                    <div class="resposta-data" v-if="alertaMaisRecente.data_resposta">
+                      <i class="fas fa-clock"></i>
+                      <span>Em: {{ formatDateTime(alertaMaisRecente.data_resposta) }}</span>
+                    </div>
+                    <div v-if="alertaMaisRecente.observacao_coordenador" class="observacao">
+                      <strong>Observação:</strong>
+                      <p>{{ alertaMaisRecente.observacao_coordenador }}</p>
+                    </div>
+                  </div>
+                </template>
               </div>
             </div>
           </div>
@@ -250,7 +317,7 @@
       
       <div v-show="isResumoExpanded" class="resumo-content">
         <div class="periodo-info">
-          <span class="periodo-label">{{ formatDate(resumoMes.periodo?.inicio) }} até {{ formatDate(resumoMes.periodo?.fim) }}</span>
+          <span class="periodo-label">{{ formatDateTime(resumoMes.periodo?.inicio) }} até {{ formatDateTime(resumoMes.periodo?.fim) }}</span>
         </div>
         <div class="resumo-info-mes">
           <div class="info-item">
@@ -267,11 +334,11 @@
           </div>
           <div class="info-item">
             <span class="info-label">Primeiro Registro:</span>
-            <span class="info-valor">{{ formatDate(resumoMes.primeiroRegistro) }}</span>
+            <span class="info-valor">{{ formatDateTime(resumoMes.primeiroRegistro) }}</span>
           </div>
           <div class="info-item">
             <span class="info-label">Último Registro:</span>
-            <span class="info-valor">{{ formatDate(resumoMes.ultimoRegistro) }}</span>
+            <span class="info-valor">{{ formatDateTime(resumoMes.ultimoRegistro) }}</span>
           </div>
         </div>
       </div>
@@ -283,6 +350,7 @@
 import axios from 'axios';
 import { onMounted, onUnmounted } from 'vue';
 import { websocketService } from '../../services/websocket';
+import { formatTime, formatDate, formatDateTime, formatFullDate } from '../../utils/dateUtils';
 
 export default {
   name: 'RegistroPonto',
@@ -312,7 +380,12 @@ export default {
       alertas: [],
       loadingAlertas: false,
       isResumoExpanded: false,
-      alertaMaisRecente: null
+      alertaMaisRecente: null,
+      toastMessage: '',
+      toastType: '',
+      tiposRegistroSelecionados: [],
+      alertaHorarioEntrada: '',
+      alertaHorarioSaida: ''
     };
   },
   computed: {
@@ -337,6 +410,32 @@ export default {
     },
     hoje() {
       return new Date().toISOString().split('T')[0];
+    },
+    podeEnviarAlerta() {
+      // Validações básicas
+      if (!this.alertaData || !this.alertaJustificativa || this.alertaJustificativa.length < 10) {
+        return false;
+      }
+
+      // Pelo menos um tipo deve estar selecionado e seu respectivo horário preenchido
+      const temEntrada = this.tiposRegistroSelecionados.includes('entrada') && this.alertaHorarioEntrada;
+      const temSaida = this.tiposRegistroSelecionados.includes('saida') && this.alertaHorarioSaida;
+
+      if (!temEntrada && !temSaida) {
+        return false;
+      }
+
+      // Se ambos estiverem selecionados, validar que saída é depois da entrada
+      if (temEntrada && temSaida) {
+        const entrada = this.alertaHorarioEntrada.split(':').map(Number);
+        const saida = this.alertaHorarioSaida.split(':').map(Number);
+        
+        if (entrada[0] > saida[0] || (entrada[0] === saida[0] && entrada[1] >= saida[1])) {
+          return false;
+        }
+      }
+
+      return true;
     }
   },
   created() {
@@ -350,15 +449,14 @@ export default {
     }
   },
   methods: {
+    formatTime,
+    formatDate,
+    formatDateTime,
+    formatFullDate,
     updateDateTime() {
       const now = new Date();
       this.currentTime = now.toLocaleTimeString('pt-BR');
-      this.currentDate = now.toLocaleDateString('pt-BR', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
+      this.currentDate = this.formatFullDate(now);
     },
     async registrarPresenca() {
       this.loading = true;
@@ -472,26 +570,6 @@ export default {
         console.error('Erro ao carregar dados:', err);
       }
     },
-    formatTime(timeString) {
-      if (!timeString) return '';
-      // Se a hora já estiver no formato HH:MM, retorna ela mesma
-      if (typeof timeString === 'string' && timeString.match(/^\d{2}:\d{2}$/)) {
-        return timeString;
-      }
-      // Se for um objeto Date ou string ISO, converte para HH:MM
-      const date = new Date(timeString);
-      if (isNaN(date.getTime())) {
-        // Se não for uma data válida, tenta extrair as horas e minutos da string
-        const [hours, minutes] = timeString.split(':');
-        return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
-      }
-      const horas = String(date.getHours()).padStart(2, '0');
-      const minutos = String(date.getMinutes()).padStart(2, '0');
-      return `${horas}:${minutos}`;
-    },
-    formatDate(dateString) {
-      return new Date(dateString).toLocaleDateString('pt-BR');
-    },
     abrirModalAjuste(registro) {
       this.registroParaAjuste = registro;
       // Formata a data/hora atual do registro para o formato do input datetime-local
@@ -567,105 +645,148 @@ export default {
     fecharModalEsquecimento() {
       this.showModalEsquecimento = false;
       this.alertaData = '';
-      this.alertaHorario = '';
-      this.alertaTipo = 'entrada';
+      this.alertaHorarioEntrada = '';
+      this.alertaHorarioSaida = '';
+      this.tiposRegistroSelecionados = [];
       this.alertaJustificativa = '';
     },
     async enviarAlertaEsquecimento() {
-      if (!this.alertaData || !this.alertaHorario || !this.alertaTipo || !this.alertaJustificativa) return;
+      if (!this.alertaData || this.tiposRegistroSelecionados.length === 0 || !this.alertaJustificativa) return;
 
       this.loadingAlerta = true;
       try {
-        const response = await axios.post('http://localhost:8000/api/v1/registros/alerta-esquecimento', {
+        // Criar payload com a nova estrutura
+        const payload = {
           data: this.alertaData,
-          horario_previsto: this.alertaHorario,
-          tipo: this.alertaTipo,
+          horario_entrada: this.tiposRegistroSelecionados.includes('entrada') ? this.alertaHorarioEntrada : null,
+          horario_saida: this.tiposRegistroSelecionados.includes('saida') ? this.alertaHorarioSaida : null,
           justificativa: this.alertaJustificativa
-        }, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        };
+
+        const response = await axios.post(
+          'http://localhost:8000/api/v1/registros/alerta-esquecimento',
+          payload,
+          {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
           }
-        });
+        );
 
         if (response.data.status === 'success') {
-          this.statusMessage = 'Alerta enviado com sucesso!';
-          this.statusClass = 'success';
+          this.mostrarToast('Alerta enviado com sucesso!', 'success');
           this.fecharModalEsquecimento();
           await this.carregarAlertas();
         } else {
-          this.statusMessage = response.data.message || 'Erro ao enviar alerta';
-          this.statusClass = 'error';
+          this.mostrarToast(response.data.message || 'Erro ao enviar alerta', 'error');
         }
       } catch (error) {
-        this.statusMessage = error.response?.data?.message || 'Erro ao enviar alerta';
-        this.statusClass = 'error';
+        console.error('Erro ao enviar alerta:', error);
+        this.mostrarToast(
+          error.response?.data?.message || 
+          'Erro ao enviar alerta. Por favor, tente novamente.',
+          'error'
+        );
       } finally {
         this.loadingAlerta = false;
       }
     },
+    mostrarToast(mensagem, tipo) {
+      this.toastMessage = mensagem;
+      this.toastType = tipo;
+      setTimeout(() => {
+        this.fecharToast();
+      }, 3000);
+    },
+    fecharToast() {
+      this.toastMessage = '';
+      this.toastType = '';
+    },
     async carregarAlertas() {
-      console.log('Iniciando carregamento de alertas...');
       this.loadingAlertas = true;
       try {
-        const response = await axios.get('http://localhost:8000/api/v1/registros/alerta-esquecimento', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
+        const [alertasResponse, ajustesResponse] = await Promise.all([
+          axios.get('http://localhost:8000/api/v1/registros/alerta-esquecimento', {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          }),
+          axios.get('http://localhost:8000/api/v1/registros/solicitacoes-ajuste', {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          })
+        ]);
 
-        console.log('Resposta da API:', response.data);
+        let todasSolicitacoes = [];
 
-        if (response.data.success) {
-          this.alertas = response.data.data || [];
-          console.log('Alertas antes da ordenação:', this.alertas);
-          
-          // Ordena os alertas por data e pega o mais recente
-          this.alertas.sort((a, b) => new Date(b.data) - new Date(a.data));
-          console.log('Alertas após ordenação:', this.alertas);
-          
-          this.alertaMaisRecente = this.alertas[0] || null;
-          console.log('Alerta mais recente antes da formatação:', this.alertaMaisRecente);
-          
-          // Se tiver um alerta mais recente, formata o horário
-          if (this.alertaMaisRecente) {
-            const horarioFormatado = this.formatarHora(this.alertaMaisRecente.horario_previsto);
-            console.log('Horário formatado:', horarioFormatado);
-            
-            this.alertaMaisRecente = {
-              ...this.alertaMaisRecente,
-              horario_previsto: horarioFormatado
-            };
-          }
-          
-          console.log('Alerta mais recente após formatação:', this.alertaMaisRecente);
-        } else {
-          console.log('Resposta da API não foi bem-sucedida:', response.data);
+        if (alertasResponse.data.status === 'success') {
+          const alertas = alertasResponse.data.data.alertas || [];
+          todasSolicitacoes.push(...alertas.map(alerta => ({
+            ...alerta,
+            tipoSolicitacao: 'alerta'
+          })));
         }
+
+        if (ajustesResponse.data.status === 'success') {
+          const ajustes = ajustesResponse.data.data.solicitacoes || [];
+          todasSolicitacoes.push(...ajustes.map(ajuste => ({
+            ...ajuste,
+            tipoSolicitacao: 'ajuste'
+          })));
+        }
+
+        // Ordenar por data de criação (mais recentes primeiro)
+        todasSolicitacoes.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+        this.alertas = todasSolicitacoes;
+        this.alertaMaisRecente = todasSolicitacoes[0] || null;
       } catch (error) {
         console.error('Erro ao carregar alertas:', error);
-        if (error.response) {
-          console.error('Detalhes do erro:', error.response.data);
-        }
       } finally {
         this.loadingAlertas = false;
       }
     },
+    formatarDataHora(dataHora) {
+      if (!dataHora) return '';
+      try {
+        const date = new Date(dataHora);
+        if (isNaN(date.getTime())) return '';
+        
+        const dia = String(date.getDate()).padStart(2, '0');
+        const mes = String(date.getMonth() + 1).padStart(2, '0');
+        const ano = date.getFullYear();
+        const hora = String(date.getHours()).padStart(2, '0');
+        const minutos = String(date.getMinutes()).padStart(2, '0');
+        
+        return `${dia}/${mes}/${ano} ${hora}:${minutos}`;
+      } catch (error) {
+        console.error('Erro ao formatar data e hora:', error);
+        return '';
+      }
+    },
     formatarHora(hora) {
       if (!hora) return '';
-      // Se a hora já estiver no formato HH:MM, retorna ela mesma
-      if (typeof hora === 'string' && hora.match(/^\d{2}:\d{2}$/)) {
-        return hora;
+      try {
+        // Se já estiver no formato HH:mm:ss, retorna apenas HH:mm
+        if (typeof hora === 'string') {
+          const match = hora.match(/^(\d{2}):(\d{2})/);
+          if (match) {
+            return `${match[1]}:${match[2]}`;
+          }
+        }
+        
+        // Se for uma data completa
+        const date = new Date(hora);
+        if (!isNaN(date.getTime())) {
+          return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+        }
+        
+        return '';
+      } catch (error) {
+        console.error('Erro ao formatar hora:', error);
+        return '';
       }
-      // Se for um objeto Date ou string ISO, converte para HH:MM
-      const date = new Date(hora);
-      if (isNaN(date.getTime())) {
-        // Se não for uma data válida, tenta extrair as horas e minutos da string
-        const [hours, minutes] = hora.split(':');
-        return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
-      }
-      const horas = String(date.getHours()).padStart(2, '0');
-      const minutos = String(date.getMinutes()).padStart(2, '0');
-      return `${horas}:${minutos}`;
     },
     formatarData(data) {
       return new Date(data).toLocaleDateString('pt-BR');
@@ -680,6 +801,13 @@ export default {
     },
     toggleResumo() {
       this.isResumoExpanded = !this.isResumoExpanded;
+    },
+    toggleTipoRegistro(tipo) {
+      if (this.tiposRegistroSelecionados.includes(tipo)) {
+        this.tiposRegistroSelecionados = this.tiposRegistroSelecionados.filter(t => t !== tipo);
+      } else {
+        this.tiposRegistroSelecionados.push(tipo);
+      }
     }
   },
   async mounted() {
@@ -1379,5 +1507,230 @@ textarea.form-control {
 .registro-button.esquecimento i {
   margin-right: 0.5rem;
   color: #FCD34D;
+}
+
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  color: white;
+  font-weight: 500;
+  z-index: 9999;
+  animation: slideIn 0.3s ease-out;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+}
+
+.toast.success {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}
+
+.toast.error {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.tipo-selector {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.tipo-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tipo-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  background: white;
+  color: #666;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.tipo-button i {
+  font-size: 1.25rem;
+}
+
+.tipo-button.active {
+  border-color: #FF6B00;
+  background: linear-gradient(135deg, rgba(255, 107, 0, 0.05) 0%, rgba(255, 158, 79, 0.05) 100%);
+  color: #FF6B00;
+}
+
+.tipo-button:hover:not(.active) {
+  border-color: #FF6B00;
+  color: #FF6B00;
+  background: rgba(255, 107, 0, 0.02);
+}
+
+.horario-input {
+  width: 100%;
+  text-align: center;
+  max-width: 150px;
+}
+
+.horario-input label {
+  display: block;
+  font-size: 0.8rem;
+  margin-bottom: 0.25rem;
+  color: #666;
+}
+
+.time-input {
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+  text-align: center;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  background: #f8f9fa;
+  transition: all 0.3s ease;
+}
+
+.time-input:focus {
+  outline: none;
+  border-color: #FF6B00;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .tipo-selector {
+    flex-direction: column;
+  }
+
+  .horario-input {
+    max-width: 100%;
+  }
+}
+
+.alerta-horarios {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.horario-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 16px;
+  font-size: 0.875rem;
+}
+
+.horario-item.entrada {
+  background-color: rgba(40, 167, 69, 0.1);
+  color: #28a745;
+}
+
+.horario-item.saida {
+  background-color: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+}
+
+.coordenador-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  color: #4a5568;
+  font-weight: 500;
+}
+
+.resposta-data {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #718096;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.alerta-feedback {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.alerta-feedback .observacao {
+  margin-top: 1rem;
+}
+
+.alerta-feedback .observacao strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #4a5568;
+}
+
+.alerta-feedback .observacao p {
+  color: #718096;
+  line-height: 1.5;
+}
+
+.tipo-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.tipo-badge.alerta {
+  color: #f97316;
+  background-color: #fff7ed;
+}
+
+.tipo-badge.ajuste {
+  color: #0891b2;
+  background-color: #ecfeff;
+}
+
+.horario-item.atual {
+  background-color: rgba(8, 145, 178, 0.1);
+  color: #0891b2;
+}
+
+.horario-item.solicitado {
+  background-color: rgba(8, 145, 178, 0.1);
+  color: #0891b2;
 }
 </style> 

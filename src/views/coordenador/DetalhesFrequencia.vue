@@ -58,91 +58,94 @@
       </div>
 
       <div class="main-content">
-        <!-- Informações do Aluno -->
-        <div class="aluno-info">
-          <div class="info-card">
-            <div class="info-header">
-              <i class="fas fa-user-graduate"></i>
-              <h3>{{ aluno.nome }}</h3>
+        <!-- Card de Informações do Aluno (Esquerda) -->
+        <div class="aluno-card">
+          <div class="aluno-header">
+            <i class="fas fa-user-graduate"></i>
+            <h3>{{ aluno.nome }}</h3>
+          </div>
+          <div class="aluno-info">
+            <div class="info-item">
+              <span class="info-label">Matrícula:</span>
+              <span class="info-value">{{ aluno.matricula }}</span>
             </div>
-            <div class="info-content">
-              <div class="info-item">
-                <span class="label">Matrícula:</span>
-                <span class="value">{{ aluno.matricula }}</span>
-              </div>
-              <div class="info-item">
-                <span class="label">Frequência Total:</span>
-                <span :class="['value', 'frequencia-badge', getFrequenciaClass(estatisticas.porcentagem_presenca)]">
+            <div class="info-item">
+              <span class="info-label">Frequência Total:</span>
+              <div class="frequencia-barra">
+                <div 
+                  class="frequencia-valor" 
+                  :style="{ width: estatisticas.porcentagem_presenca + '%' }"
+                  :class="getFrequenciaClass(estatisticas.porcentagem_presenca)"
+                >
                   {{ estatisticas.porcentagem_presenca }}%
-                </span>
+                </div>
               </div>
-              <div class="info-item">
-                <span class="label">Dias Presentes:</span>
-                <span class="value">{{ estatisticas.dias_presenca }} / {{ periodo.total_dias }} dias</span>
-              </div>
-              <div class="info-item">
-                <span class="label">Total de Horas:</span>
-                <span class="value">{{ estatisticas.total_horas_trabalhadas }}h</span>
-              </div>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Dias Presentes:</span>
+              <span class="info-value">{{ estatisticas.dias_presenca }} / {{ periodo.total_dias }} dias</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Total de Horas:</span>
+              <span class="info-value">{{ estatisticas.total_horas_trabalhadas }}h</span>
             </div>
           </div>
         </div>
 
-        <!-- Histórico de Registros -->
-        <div class="registros-section">
-          <h3>
-            <i class="fas fa-history"></i>
-            Histórico de Registros
-          </h3>
-          <div class="registros-table">
-            <table>
-              <thead>
-                <tr>
-                  <th>Data</th>
-                  <th>Dia da Semana</th>
-                  <th>Entrada</th>
-                  <th>Saída</th>
-                  <th>Horas Trabalhadas</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="registro in registros" :key="registro.data">
-                  <td>{{ formatarData(registro.data) }}</td>
-                  <td>{{ traduzirDiaSemana(registro.dia_semana) }}</td>
-                  <td>{{ registro.entrada || '-' }}</td>
-                  <td>{{ registro.saida || '-' }}</td>
-                  <td>{{ registro.horas_trabalhadas || '-' }}</td>
-                </tr>
-              </tbody>
-            </table>
+        <!-- Conteúdo da Direita -->
+        <div class="content-right">
+          <!-- Seção de Registros de Hoje -->
+          <div class="registros-hoje">
+            <div class="section-header">
+              <i class="fas fa-clock"></i>
+              <h3>Registros de Hoje</h3>
+            </div>
+            <div class="registro-card">
+              <div class="registro-info">
+                <div class="registro-linha">
+                  <span class="registro-label">Entrada:</span>
+                  <span class="registro-hora">{{ registrosDeHoje[0]?.entrada || '-' }}</span>
+                </div>
+                <div class="registro-linha">
+                  <span class="registro-label">Saída:</span>
+                  <span class="registro-hora">{{ registrosDeHoje[0]?.saida || '-' }}</span>
+                </div>
+              </div>
+              <div class="registro-data">
+                <span class="dia-semana">{{ registrosDeHoje[0]?.dia_semana }}</span>
+                <span class="data">{{ formatarData(registrosDeHoje[0]?.data) }}</span>
+              </div>
+            </div>
           </div>
 
-          <div v-if="!registros.length" class="no-data">
-            <i class="fas fa-calendar-times"></i>
-            <p>Nenhum registro encontrado para o período selecionado</p>
-          </div>
-
-          <!-- Paginação -->
-          <div v-if="paginacao.ultimaPagina > 1" class="paginacao">
-            <button 
-              class="page-button"
-              :disabled="paginacao.paginaAtual === 1"
-              @click="buscarFrequencia(paginacao.paginaAtual - 1)"
-            >
-              <i class="fas fa-chevron-left"></i>
-            </button>
-            
-            <span class="page-info">
-              Página {{ paginacao.paginaAtual }} de {{ paginacao.ultimaPagina }}
-            </span>
-            
-            <button 
-              class="page-button"
-              :disabled="paginacao.paginaAtual === paginacao.ultimaPagina"
-              @click="buscarFrequencia(paginacao.paginaAtual + 1)"
-            >
-              <i class="fas fa-chevron-right"></i>
-            </button>
+          <!-- Seção de Histórico -->
+          <div class="historico">
+            <div class="section-header">
+              <i class="fas fa-history"></i>
+              <h3>Histórico de Registros</h3>
+            </div>
+            <div class="table-responsive">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Dia da Semana</th>
+                    <th>Entrada</th>
+                    <th>Saída</th>
+                    <th>Horas Trabalhadas</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="registro in registros" :key="registro.data">
+                    <td>{{ formatarData(registro.data) }}</td>
+                    <td>{{ registro.dia_semana }}</td>
+                    <td>{{ registro.entrada || '-' }}</td>
+                    <td>{{ registro.saida || '-' }}</td>
+                    <td>{{ registro.total_horas || '-' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -151,7 +154,7 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import axios from 'axios';
 
@@ -187,6 +190,11 @@ export default {
       ultimaPagina: 1
     });
 
+    const registrosDeHoje = computed(() => {
+      const hoje = new Date().toISOString().split('T')[0];
+      return registros.value.filter(registro => registro.data === hoje);
+    });
+
     const buscarFrequencia = async (pagina = 1) => {
       loading.value = true;
       error.value = '';
@@ -219,14 +227,31 @@ export default {
           registros.value = response.data.data.registros || [];
           estatisticas.value = response.data.data.estatisticas || {};
           periodo.value = response.data.data.periodo || {};
-          
-          if (response.data.data.pagination) {
-            paginacao.value = {
-              total: response.data.data.pagination.total,
-              porPagina: response.data.data.pagination.per_page,
-              paginaAtual: response.data.data.pagination.current_page,
-              ultimaPagina: response.data.data.pagination.last_page
-            };
+
+          // Filtrar registros de hoje
+          const hoje = new Date().toISOString().split('T')[0];
+          const registrosHoje = registros.value.filter(registro => 
+            registro.data === hoje
+          );
+
+          // Atualizar os registros de hoje
+          if (registrosHoje.length > 0) {
+            const registro = registrosHoje[0];
+            registrosHoje.value = [];
+            
+            if (registro.entrada) {
+              registrosHoje.value.push({
+                horario: `${registro.data}T${registro.entrada}`,
+                tipo: 'entrada'
+              });
+            }
+            
+            if (registro.saida) {
+              registrosHoje.value.push({
+                horario: `${registro.data}T${registro.saida}`,
+                tipo: 'saida'
+              });
+            }
           }
         } else {
           error.value = response.data.message || 'Erro ao carregar dados de frequência';
@@ -241,20 +266,17 @@ export default {
 
     const formatarData = (data) => {
       if (!data) return '-';
-      return new Date(data).toLocaleDateString('pt-BR');
+      const [ano, mes, dia] = data.split('-');
+      return `${dia}/${mes}/${ano}`;
+    };
+
+    const formatarHora = (hora) => {
+      if (!hora) return '-';
+      return hora.substring(0, 5); // Retorna apenas HH:mm
     };
 
     const traduzirDiaSemana = (dia) => {
-      const dias = {
-        'Sunday': 'Domingo',
-        'Monday': 'Segunda-feira',
-        'Tuesday': 'Terça-feira',
-        'Wednesday': 'Quarta-feira',
-        'Thursday': 'Quinta-feira',
-        'Friday': 'Sexta-feira',
-        'Saturday': 'Sábado'
-      };
-      return dias[dia] || dia;
+      return dia; // Já está em português no response
     };
 
     const getFrequenciaClass = (frequencia) => {
@@ -282,9 +304,11 @@ export default {
       paginacao,
       buscarFrequencia,
       formatarData,
+      formatarHora,
       traduzirDiaSemana,
       getFrequenciaClass,
-      voltar
+      voltar,
+      registrosDeHoje
     };
   }
 };
@@ -385,45 +409,50 @@ select {
 }
 
 .main-content {
-  display: flex;
-  gap: 2rem;
-  background: white;
+  max-width: 1400px;
+  margin: 0 auto;
   padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  display: grid;
+  grid-template-columns: 350px 1fr;
+  gap: 2rem;
 }
 
-.aluno-info {
-  width: 300px;
-  flex-shrink: 0;
-}
-
-.info-card {
-  height: 100%;
+.content-right {
   display: flex;
   flex-direction: column;
+  gap: 2rem;
 }
 
-.info-header {
+.aluno-card {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  height: fit-content;
+  position: sticky;
+  top: 2rem;
+}
+
+.aluno-header {
   display: flex;
   align-items: center;
   gap: 1rem;
   margin-bottom: 2rem;
 }
 
-.info-header i {
-  font-size: 2.5rem;
-  color: #4299e1;
+.aluno-header i {
+  font-size: 2rem;
+  color: #3182CE;
 }
 
-.info-header h3 {
-  margin: 0;
-  color: #2d3748;
+.aluno-header h3 {
   font-size: 1.5rem;
   font-weight: 600;
+  color: #2D3748;
+  margin: 0;
 }
 
-.info-content {
+.aluno-info {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -435,27 +464,115 @@ select {
   gap: 0.5rem;
 }
 
-.info-item .label {
-  color: #64748b;
-  font-size: 0.95rem;
+.info-label {
+  color: #718096;
+  font-size: 0.9rem;
+}
+
+.info-value {
+  color: #2D3748;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.frequencia-barra {
+  background: #FED7D7;
+  border-radius: 9999px;
+  height: 2rem;
+  overflow: hidden;
+}
+
+.frequencia-valor {
+  height: 100%;
+  padding: 0 1rem;
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  font-size: 1rem;
+  color: #9B2C2C;
+  transition: width 0.3s ease;
+}
+
+.frequencia-valor.baixa {
+  background: #FED7D7;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.section-header i {
+  color: #3182CE;
+  font-size: 1.25rem;
+}
+
+.section-header h3 {
+  color: #2D3748;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.registro-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.registro-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.registro-linha {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.registro-label {
+  color: #4A5568;
   font-weight: 500;
+  min-width: 70px;
 }
 
-.info-item .value {
+.registro-hora {
+  color: #2D3748;
   font-size: 1.25rem;
   font-weight: 600;
-  color: #2d3748;
 }
 
-.registros-section {
-  flex: 1;
+.registro-data {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
 }
 
-.registros-section h3 {
-  margin-bottom: 1.5rem;
-  color: #2d3748;
-  font-size: 1.25rem;
-  font-weight: 600;
+.dia-semana {
+  color: #4A5568;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.data {
+  color: #718096;
+  font-size: 0.875rem;
+}
+
+.table-responsive {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  overflow: auto;
 }
 
 table {
@@ -463,94 +580,106 @@ table {
   border-collapse: collapse;
 }
 
-th, td {
+th {
+  background: #F7FAFC;
   padding: 1rem;
   text-align: left;
-  border-bottom: 1px solid #e2e8f0;
+  color: #4A5568;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
-th {
-  font-weight: 600;
-  color: #4a5568;
-  background: #f8fafc;
+td {
+  padding: 1rem;
+  color: #2D3748;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+tr:last-child td {
+  border-bottom: none;
 }
 
 tr:hover td {
-  background: #f8fafc;
+  background: #F7FAFC;
 }
 
-.frequencia-badge {
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  font-weight: 600;
-  display: inline-flex;
+.registros-hoje {
+  margin-bottom: 2rem;
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  animation: slideUp 0.3s ease;
+}
+
+.registros-hoje h3 {
+  display: flex;
   align-items: center;
-  gap: 0.5rem;
-}
-
-.frequencia-badge.alta {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-.frequencia-badge.media {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.frequencia-badge.baixa {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
-.no-data {
-  text-align: center;
-  padding: 3rem;
-  color: #64748b;
-}
-
-.no-data i {
-  font-size: 3.5rem;
-  color: #94a3b8;
+  gap: 0.75rem;
+  color: #2d3748;
+  font-size: 1.25rem;
   margin-bottom: 1.5rem;
 }
 
-.paginacao {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #e2e8f0;
-}
-
-.page-button {
-  padding: 0.75rem 1rem;
-  border: 2px solid #e2e8f0;
-  border-radius: 8px;
-  background: white;
-  cursor: pointer;
-  transition: all 0.3s ease;
+.registros-hoje h3 i {
   color: #4299e1;
 }
 
-.page-button:hover:not(:disabled) {
-  background: #4299e1;
-  border-color: #4299e1;
-  color: white;
-  transform: translateY(-2px);
+.registros-hoje-card {
+  display: grid;
+  gap: 1rem;
 }
 
-.page-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.registro-hoje-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
   background: #f7fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
 }
 
-.page-info {
-  color: #4a5568;
+.registro-hoje-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.tempo-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.tempo-info .label {
   font-weight: 500;
+  color: #4a5568;
+  min-width: 70px;
+}
+
+.tempo-info .hora {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.dia-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+.dia-info .dia-semana {
+  font-weight: 500;
+  color: #4a5568;
+  text-transform: capitalize;
+}
+
+.dia-info .data {
+  font-size: 0.875rem;
+  color: #718096;
 }
 
 .loading-indicator {
@@ -599,37 +728,46 @@ tr:hover td {
 
 @media (max-width: 1024px) {
   .main-content {
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
 
-  .aluno-info {
-    width: 100%;
+  .aluno-card {
+    position: static;
   }
+}
 
-  .info-content {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+@media (max-width: 768px) {
+  .main-content {
+    padding: 1rem;
     gap: 1rem;
   }
 
-  .filtros {
+  .content-right {
+    gap: 1rem;
+  }
+
+  .aluno-card,
+  .registro-card {
+    padding: 1.25rem;
+  }
+
+  .registro-card {
     flex-direction: column;
-    align-items: stretch;
+    gap: 1rem;
   }
 
-  .periodo-select {
-    flex-direction: column;
-    align-items: stretch;
+  .registro-data {
+    align-items: flex-start;
+    margin-top: 0.5rem;
   }
 
-  select {
-    width: 100%;
-    min-width: auto;
+  .table-responsive {
+    margin: 0;
+    border-radius: 12px;
   }
 
-  .filter-button {
-    width: 100%;
-    justify-content: center;
+  table {
+    min-width: 600px;
   }
 }
 </style> 
