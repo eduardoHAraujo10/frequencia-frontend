@@ -24,14 +24,15 @@
 
         <div class="filtros-busca">
           <div class="filtro-grupo">
-            <label>Nome do Aluno</label>
-            <div class="input-icon">
-              <i class="fas fa-user"></i>
-              <input 
-                type="text" 
-                v-model="filtros.nomeAluno" 
-                placeholder="Digite o nome do aluno"
-              />
+            <label>Aluno</label>
+            <div class="select-icon">
+              <select v-model="filtros.alunoId">
+                <option value="">Todos os Alunos</option>
+                <option v-for="aluno in listaAlunos" :key="aluno.id" :value="aluno.id">
+                  {{ aluno.nome }}
+                </option>
+              </select>
+              <i class="fas fa-chevron-down"></i>
             </div>
           </div>
 
@@ -168,9 +169,12 @@
                         <tbody>
                           <tr v-for="registro in aluno.registros" :key="registro.data">
                             <td>{{ registro.data }}</td>
-                            <td>{{ registro.entrada }}</td>
-                            <td>{{ registro.saida }}</td>
-                            <td>{{ registro.total_horas }}</td>
+                            <td>{{ registro.entrada || '-' }}</td>
+                            <td>{{ registro.saida || '-' }}</td>
+                            <td>{{ registro.total_horas || '-' }}</td>
+                          </tr>
+                          <tr v-if="aluno.registros.length === 0">
+                            <td colspan="4" class="sem-registros">Nenhum registro encontrado no período</td>
                           </tr>
                         </tbody>
                       </table>
@@ -205,12 +209,13 @@ export default {
     const error = ref('');
     const alunoExpandido = ref(null);
     const periodo = ref(null);
+    const listaAlunos = ref([]);
     
     // Filtros
     const filtros = ref({
       dataInicial: '',
       dataFinal: '',
-      nomeAluno: '',
+      alunoId: '',
       matricula: '',
       status: ''
     });
@@ -225,83 +230,77 @@ export default {
 
     const alunosDetalhados = ref([]);
 
-    const gerarRelatorio = async () => {
-      loading.value = true;
-      error.value = '';
-
+    // Buscar lista de alunos
+    const carregarAlunos = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/api/v1/gerenciador/relatorio', {
-          params: {
-            data_inicio: filtros.value.dataInicial,
-            data_fim: filtros.value.dataFinal,
-            nome: filtros.value.nomeAluno || undefined,
-            matricula: filtros.value.matricula || undefined,
-            status: filtros.value.status || 'todos'
-          },
+        const response = await axios.get('http://localhost:8000/api/v1/gerenciador/alunos', {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
         });
 
         if (response.data.status === 'success') {
-          const { resumo, alunos, registros, periodo: periodoData } = response.data.data;
+          listaAlunos.value = response.data.data.alunos || [];
+        }
+      } catch (err) {
+        console.error('Erro ao carregar lista de alunos:', err);
+      }
+    };
+
+    const gerarRelatorio = async () => {
+      loading.value = true;
+      error.value = '';
+
+      try {
+        const params = {
+          data_inicio: filtros.value.dataInicial,
+          data_fim: filtros.value.dataFinal,
+          status: filtros.value.status || undefined
+        };
+
+        if (filtros.value.alunoId) {
+          params.aluno_id = filtros.value.alunoId;
+        }
+
+        if (filtros.value.matricula) {
+          params.matricula = filtros.value.matricula;
+        }
+
+        const response = await axios.get('http://localhost:8000/api/v1/gerenciador/relatorio', {
+          params,
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        if (response.data.status === 'success') {
+          const { resumo, alunos, periodo: periodoData } = response.data.data;
           periodo.value = periodoData;
           
-          // Atualizar resumo geral
           resumoGeral.value = {
             totalAlunosAtivos: resumo.total_alunos,
             totalAlunosPresentes: resumo.presentes,
-            mediaPresencaGeral: resumo.media_presenca.toFixed(1),
-            totalHorasRegistradas: resumo.total_horas.toFixed(2)
+            mediaPresencaGeral: Number(resumo.media_presenca).toFixed(1),
+            totalHorasRegistradas: Number(resumo.total_horas).toFixed(2)
           };
 
-          // Atualizar lista de alunos com seus registros
-          alunosDetalhados.value = alunos.map(aluno => {
-            // Processar registros para agrupar entradas e saídas
-            const registrosPorData = {};
-            
-            // Filtrar registros do aluno atual
-            const registrosDoAluno = registros
-              .filter(reg => reg.matricula === aluno.matricula)
-              .sort((a, b) => {
-                const dataComparison = a.data.localeCompare(b.data);
-                if (dataComparison === 0) {
-                  return a.hora.localeCompare(b.hora);
-                }
-                return dataComparison;
-              });
+          let alunosFiltrados = alunos;
+          
+          if (filtros.value.alunoId) {
+            alunosFiltrados = alunos.filter(aluno => aluno.id === parseInt(filtros.value.alunoId));
+          }
 
-            // Agrupar registros por data
-            let periodoAtual = null;
-            registrosDoAluno.forEach(reg => {
-              if (!registrosPorData[reg.data]) {
-                registrosPorData[reg.data] = [];
-              }
-
-              if (reg.tipo === 'Entrada') {
-                periodoAtual = { data: reg.data, entrada: reg.hora, saida: null, total_horas: '00:00' };
-                registrosPorData[reg.data].push(periodoAtual);
-              } else if (reg.tipo === 'Saida' && periodoAtual) {
-                periodoAtual.saida = reg.hora;
-                periodoAtual.total_horas = calcularDiferencaHoras(periodoAtual.entrada, reg.hora);
-                periodoAtual = null;
-              }
-            });
-
-            // Converter para array de registros
-            const registrosProcessados = Object.entries(registrosPorData)
-              .flatMap(([data, periodos]) => periodos);
-
+          alunosDetalhados.value = alunosFiltrados.map(aluno => {
             return {
               ...aluno,
-              diasPresenca: aluno.estatisticas.dias_presenca,
-              diasAusencia: aluno.estatisticas.dias_ausencia,
-              porcentagemPresenca: aluno.estatisticas.porcentagem_presenca.toFixed(2),
-              totalHorasTrabalhadas: aluno.estatisticas.total_horas_trabalhadas.toFixed(2),
-              primeiroRegistro: aluno.primeiro_registro,
-              ultimoRegistro: aluno.ultimo_registro,
-              horarioUltimoRegistro: aluno.horario_ultimo_registro,
-              registros: registrosProcessados
+              diasPresenca: aluno.estatisticas?.dias_presenca || 0,
+              diasAusencia: aluno.estatisticas?.dias_ausencia || 0,
+              porcentagemPresenca: Number(aluno.estatisticas?.porcentagem_presenca || 0).toFixed(2),
+              totalHorasTrabalhadas: Number(aluno.estatisticas?.total_horas_trabalhadas || 0).toFixed(2),
+              primeiroRegistro: aluno.primeiro_registro || '-',
+              ultimoRegistro: aluno.ultimo_registro || '-',
+              horarioUltimoRegistro: aluno.horario_ultimo_registro || '-',
+              registros: aluno.registros_diarios || []
             };
           });
         }
@@ -340,24 +339,41 @@ export default {
     );
 
     const formatarData = (data) => {
-      if (!data) return '-';
-      // Verifica se a data já está no formato dd/mm/yyyy
+      if (!data || data === '-' || data === 'Invalid Date') return '-';
+      
+      // Se a data já estiver no formato dd/mm/yyyy, retorna como está
       if (data.includes('/')) {
         return data;
       }
-      return new Date(data).toLocaleDateString('pt-BR');
+
+      try {
+        const date = new Date(data);
+        if (isNaN(date.getTime())) return '-';
+        return date.toLocaleDateString('pt-BR');
+      } catch (error) {
+        return '-';
+      }
     };
 
     const formatarHora = (hora) => {
-      if (!hora) return '-';
+      if (!hora || hora === '-' || hora === 'Invalid Date') return '-';
+      
       // Se já estiver no formato HH:mm, retorna como está
       if (hora.match(/^\d{2}:\d{2}$/)) {
         return hora;
       }
-      return new Date(`2000-01-01T${hora}`).toLocaleTimeString('pt-BR', {
-        hour: '2-digit',
-        minute: '2-digit'
-      });
+
+      try {
+        // Tenta criar uma data com a hora fornecida
+        const date = new Date(`2000-01-01T${hora}`);
+        if (isNaN(date.getTime())) return '-';
+        return date.toLocaleTimeString('pt-BR', {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      } catch (error) {
+        return '-';
+      }
     };
 
     const exportarPDF = async () => {
@@ -369,7 +385,7 @@ export default {
             params: {
               data_inicio: filtros.value.dataInicial,
               data_fim: filtros.value.dataFinal,
-              nome: filtros.value.nomeAluno || undefined,
+              aluno_id: filtros.value.alunoId || undefined,
               matricula: filtros.value.matricula || undefined,
               status: filtros.value.status || 'todos',
               formato: 'pdf'
@@ -416,7 +432,8 @@ export default {
       filtros.value.dataInicial = primeiroDiaMes.toISOString().split('T')[0];
       filtros.value.dataFinal = hoje.toISOString().split('T')[0];
       
-      // Carregar relatório inicial
+      // Carregar lista de alunos e relatório inicial
+      carregarAlunos();
       gerarRelatorio();
     });
 
@@ -428,6 +445,7 @@ export default {
       alunosDetalhados,
       alunoExpandido,
       periodo,
+      listaAlunos,
       toggleDetalhes,
       gerarRelatorio,
       formatarData,
@@ -1017,5 +1035,32 @@ td, th {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.select-icon select {
+  width: 100%;
+  padding: 0.75rem 2.5rem 0.75rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  background-color: #f8fafc;
+  transition: all 0.3s ease;
+  color: #2d3748;
+  appearance: none;
+  cursor: pointer;
+}
+
+.select-icon select:focus {
+  outline: none;
+  border-color: #4a5568;
+  box-shadow: 0 0 0 3px rgba(74, 85, 104, 0.1);
+  background-color: white;
+}
+
+.sem-registros {
+  text-align: center;
+  color: #718096;
+  padding: 1rem;
+  font-style: italic;
 }
 </style> 
