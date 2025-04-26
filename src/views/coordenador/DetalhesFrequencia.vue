@@ -154,7 +154,7 @@
 </template>
 
 <script>
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, onMounted, computed, watch, onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import axios from 'axios';
 
@@ -189,11 +189,30 @@ export default {
       paginaAtual: 1,
       ultimaPagina: 1
     });
+    const registrosDeHoje = ref([]);
 
-    const registrosDeHoje = computed(() => {
-      const hoje = new Date().toISOString().split('T')[0];
-      return registros.value.filter(registro => registro.data === hoje);
-    });
+    const buscarRegistrosDeHoje = async () => {
+      try {
+        const alunoId = route.params.id;
+        const hoje = new Date().toISOString().split('T')[0];
+        
+        const response = await axios.get(`http://localhost:8000/api/v1/gerenciador/alunos/${alunoId}/frequencia`, {
+          params: {
+            data_inicio: hoje,
+            data_fim: hoje
+          },
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        if (response.data.status === 'success' && response.data.data.registros) {
+          registrosDeHoje.value = response.data.data.registros;
+        }
+      } catch (err) {
+        console.error('Erro ao buscar registros de hoje:', err);
+      }
+    };
 
     const buscarFrequencia = async (pagina = 1) => {
       loading.value = true;
@@ -229,7 +248,6 @@ export default {
           };
         }
 
-        // Adiciona página aos parâmetros se necessário
         if (pagina > 1) {
           params.page = pagina;
         }
@@ -266,19 +284,15 @@ export default {
     // Observador para mudanças no período
     watch(() => filtro.value.periodo, (novoPeriodo) => {
       if (novoPeriodo === 'custom') {
-        // Se for personalizado, deixa o usuário selecionar as datas
         return;
       }
-      // Para outros períodos, busca automaticamente
       buscarFrequencia(1);
     });
 
-    // Inicialização das datas do filtro personalizado
     const inicializarDatas = () => {
       const hoje = new Date();
       filtro.value.dataFim = hoje.toISOString().split('T')[0];
-      
-      hoje.setDate(hoje.getDate() - 7); // Começa com 7 dias por padrão
+      hoje.setDate(hoje.getDate() - 7);
       filtro.value.dataInicio = hoje.toISOString().split('T')[0];
     };
 
@@ -310,6 +324,13 @@ export default {
     onMounted(() => {
       inicializarDatas();
       buscarFrequencia(1);
+      buscarRegistrosDeHoje();
+    });
+
+    // Atualizar registros de hoje a cada minuto
+    const intervalId = setInterval(buscarRegistrosDeHoje, 60000);
+    onUnmounted(() => {
+      clearInterval(intervalId);
     });
 
     return {
@@ -317,6 +338,7 @@ export default {
       error,
       aluno,
       registros,
+      registrosDeHoje,
       estatisticas,
       periodo,
       filtro,
@@ -326,8 +348,7 @@ export default {
       formatarHora,
       traduzirDiaSemana,
       getFrequenciaClass,
-      voltar,
-      registrosDeHoje
+      voltar
     };
   }
 };
