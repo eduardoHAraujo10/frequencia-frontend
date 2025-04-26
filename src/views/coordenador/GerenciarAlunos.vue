@@ -14,28 +14,31 @@
           <va-input
             v-model="formData.username"
             label="Nome do aluno"
-            :error="errors.username"
+            :error="false"
           />
+          <span v-if="errors.username" class="error-message">{{ errors.username }}</span>
         </div>
 
         <div class="form-group">
           <va-input
             v-model="formData.email"
             label="E-mail"
-            :error="errors.email"
+            :error="false"
           />
+          <span v-if="errors.email" class="error-message">{{ errors.email }}</span>
         </div>
 
         <div class="form-group">
           <va-input
             v-model="formData.matricula"
             label="Matrícula"
-            :error="errors.matricula"
+            :error="false"
           />
+          <span v-if="errors.matricula" class="error-message">{{ errors.matricula }}</span>
         </div>
 
         <div class="form-actions">
-          <va-button flat @click="showModal = false">
+          <va-button flat @click="handleCancel">
             Cancelar
           </va-button>
           <va-button @click="handleSubmit">
@@ -130,7 +133,7 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { VaInput, VaButton, VaModal } from 'vuestic-ui'
 import axios from 'axios';
 import { useRouter } from 'vue-router';
@@ -193,21 +196,24 @@ export default {
     });
 
     const validateField = (field) => {
-      // Só valida se o campo não estiver vazio
-      if (!formData.value[field]) return;
-      
       errors.value[field] = '';
       
       switch (field) {
         case 'username':
-          if (formData.value.username.length < 3) {
+          if (!formData.value.username) {
+            errors.value.username = 'O nome é obrigatório';
+          } else if (formData.value.username.length < 3) {
             errors.value.username = 'O nome deve ter pelo menos 3 caracteres';
           }
           break;
         case 'email':
-          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-          if (!emailRegex.test(formData.value.email)) {
-            errors.value.email = 'Digite um e-mail válido';
+          if (!formData.value.email) {
+            errors.value.email = 'O e-mail é obrigatório';
+          } else {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(formData.value.email)) {
+              errors.value.email = 'Digite um e-mail válido';
+            }
           }
           break;
         case 'matricula':
@@ -221,57 +227,40 @@ export default {
     const validateForm = () => {
       let isValid = true;
       
-      // Validar nome
-      if (!formData.value.username || formData.value.username.length < 3) {
-        errors.value.username = 'O nome deve ter pelo menos 3 caracteres';
-        isValid = false;
-      } else {
-        errors.value.username = '';
-      }
+      // Validar todos os campos
+      validateField('username');
+      validateField('email');
+      validateField('matricula');
 
-      // Validar email
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!formData.value.email || !emailRegex.test(formData.value.email)) {
-        errors.value.email = 'Digite um e-mail válido';
-        isValid = false;
-      } else {
-        errors.value.email = '';
-      }
-
-      // Validar matrícula
-      if (!formData.value.matricula) {
-        errors.value.matricula = 'A matrícula é obrigatória';
-        isValid = false;
-      } else {
-        errors.value.matricula = '';
-      }
+      // Verificar se há algum erro
+      isValid = !Object.values(errors.value).some(error => error !== '');
 
       return isValid;
     };
 
     const handleSubmit = async (e) => {
-      e.preventDefault(); // Previne o comportamento padrão do formulário
+      e.preventDefault();
       
       if (!validateForm()) {
-        message.value = 'Por favor, preencha todos os campos corretamente';
-        messageType.value = 'error';
         return;
       }
       
       loading.value = true;
       message.value = '';
       messageType.value = '';
+      // Limpar erros anteriores
+      Object.keys(errors.value).forEach(key => {
+        errors.value[key] = '';
+      });
 
       try {
         const dadosCadastro = {
           nome: formData.value.username,
           email: formData.value.email,
           matricula: formData.value.matricula,
-          senha: formData.value.matricula, // Alterado de password para senha
+          senha: formData.value.matricula,
           tipo: 'aluno'
         };
-
-        console.log('Enviando dados:', dadosCadastro);
 
         const response = await axios.post('http://localhost:8000/api/v1/gerenciador/alunos', dadosCadastro, {
           headers: {
@@ -280,21 +269,34 @@ export default {
           }
         });
         
-        console.log('Resposta:', response);
-        
-        if (response.status === 201 || response.status === 200) { // Verifica ambos os status de sucesso
+        if (response.status === 201 || response.status === 200) {
           message.value = 'Aluno cadastrado com sucesso! A senha é igual à matrícula.';
           messageType.value = 'success';
           await carregarAlunos();
-          setTimeout(() => {
-            showModal.value = false;
-            resetForm();
-          }, 2000);
+          showModal.value = false;
+          resetForm();
         }
       } catch (err) {
         console.error('Erro ao cadastrar:', err);
-        message.value = err.response?.data?.message || 'Erro ao cadastrar aluno';
-        messageType.value = 'error';
+        
+        // Tratamento específico para erros de validação do backend
+        if (err.response?.data?.errors) {
+          const backendErrors = err.response.data.errors;
+          Object.keys(backendErrors).forEach(field => {
+            if (field === 'matricula') {
+              errors.value.matricula = backendErrors[field][0];
+            }
+            if (field === 'email') {
+              errors.value.email = backendErrors[field][0];
+            }
+            if (field === 'nome') {
+              errors.value.username = backendErrors[field][0];
+            }
+          });
+        } else {
+          message.value = err.response?.data?.message || 'Erro ao cadastrar aluno';
+          messageType.value = 'error';
+        }
       } finally {
         loading.value = false;
       }
@@ -344,13 +346,10 @@ export default {
         });
 
         if (response.data.status === 'success') {
-          message.value = `Aluno ${aluno.ativo ? 'desativado' : 'ativado'} com sucesso!`;
-          messageType.value = 'success';
           await carregarAlunos(); // Recarrega a lista
         }
       } catch (err) {
-        message.value = err.response?.data?.message || 'Erro ao alterar status do aluno';
-        messageType.value = 'error';
+        console.error('Erro ao alterar status:', err);
       }
     };
 
@@ -398,6 +397,18 @@ export default {
       }
     };
 
+    const handleCancel = () => {
+      showModal.value = false;
+      resetForm();
+    };
+
+    // Observar mudanças no showModal
+    watch(showModal, (newValue) => {
+      if (!newValue) {
+        resetForm();
+      }
+    });
+
     // Carregar alunos ao montar o componente
     carregarAlunos();
 
@@ -420,6 +431,7 @@ export default {
       filteredAlunos,
       validateField,
       handleSubmit,
+      handleCancel,
       carregarAlunos,
       alterarStatus,
       verRegistros,
@@ -646,6 +658,12 @@ tr:hover {
 .message.error {
   background-color: #fed7d7;
   color: #822727;
+}
+
+.error-message {
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
 }
 
 @media (max-width: 768px) {

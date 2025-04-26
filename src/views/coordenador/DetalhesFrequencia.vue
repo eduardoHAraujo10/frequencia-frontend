@@ -154,7 +154,7 @@
 </template>
 
 <script>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import axios from 'axios';
 
@@ -202,17 +202,36 @@ export default {
       try {
         const alunoId = route.params.id;
         let url = `http://localhost:8000/api/v1/gerenciador/alunos/${alunoId}/frequencia`;
-        const params = {};
+        let params = {};
 
-        if (filtro.value.periodo === 'custom') {
-          params.dataInicio = filtro.value.dataInicio;
-          params.dataFim = filtro.value.dataFim;
+        // Lógica de filtro ajustada
+        if (filtro.value.periodo === 'custom' && filtro.value.dataInicio && filtro.value.dataFim) {
+          params = {
+            data_inicio: filtro.value.dataInicio,
+            data_fim: filtro.value.dataFim
+          };
         } else if (filtro.value.periodo === 'hoje') {
+          const hoje = new Date().toISOString().split('T')[0];
+          params = {
+            data_inicio: hoje,
+            data_fim: hoje
+          };
+        } else if (filtro.value.periodo !== 'custom') {
           const hoje = new Date();
-          params.dataInicio = hoje.toISOString().split('T')[0];
-          params.dataFim = hoje.toISOString().split('T')[0];
-        } else {
-          params.dias = filtro.value.periodo;
+          const dataFim = hoje.toISOString().split('T')[0];
+          
+          hoje.setDate(hoje.getDate() - parseInt(filtro.value.periodo));
+          const dataInicio = hoje.toISOString().split('T')[0];
+          
+          params = {
+            data_inicio: dataInicio,
+            data_fim: dataFim
+          };
+        }
+
+        // Adiciona página aos parâmetros se necessário
+        if (pagina > 1) {
+          params.page = pagina;
         }
 
         const response = await axios.get(url, {
@@ -225,43 +244,42 @@ export default {
         if (response.data.status === 'success') {
           aluno.value = response.data.data.aluno || {};
           registros.value = response.data.data.registros || [];
-          estatisticas.value = response.data.data.estatisticas || {};
-          periodo.value = response.data.data.periodo || {};
-
-          // Filtrar registros de hoje
-          const hoje = new Date().toISOString().split('T')[0];
-          const registrosHoje = registros.value.filter(registro => 
-            registro.data === hoje
-          );
-
-          // Atualizar os registros de hoje
-          if (registrosHoje.length > 0) {
-            const registro = registrosHoje[0];
-            registrosHoje.value = [];
-            
-            if (registro.entrada) {
-              registrosHoje.value.push({
-                horario: `${registro.data}T${registro.entrada}`,
-                tipo: 'entrada'
-              });
-            }
-            
-            if (registro.saida) {
-              registrosHoje.value.push({
-                horario: `${registro.data}T${registro.saida}`,
-                tipo: 'saida'
-              });
-            }
-          }
+          estatisticas.value = response.data.data.estatisticas || {
+            dias_presenca: 0,
+            porcentagem_presenca: 0,
+            total_horas_trabalhadas: 0
+          };
+          periodo.value = response.data.data.periodo || {
+            total_dias: 0
+          };
         } else {
           error.value = response.data.message || 'Erro ao carregar dados de frequência';
         }
       } catch (err) {
-        error.value = 'Erro ao carregar dados de frequência. Tente novamente.';
-        console.error(err);
+        console.error('Erro na requisição:', err);
+        error.value = err.response?.data?.message || 'Erro ao carregar dados de frequência. Tente novamente.';
       } finally {
         loading.value = false;
       }
+    };
+
+    // Observador para mudanças no período
+    watch(() => filtro.value.periodo, (novoPeriodo) => {
+      if (novoPeriodo === 'custom') {
+        // Se for personalizado, deixa o usuário selecionar as datas
+        return;
+      }
+      // Para outros períodos, busca automaticamente
+      buscarFrequencia(1);
+    });
+
+    // Inicialização das datas do filtro personalizado
+    const inicializarDatas = () => {
+      const hoje = new Date();
+      filtro.value.dataFim = hoje.toISOString().split('T')[0];
+      
+      hoje.setDate(hoje.getDate() - 7); // Começa com 7 dias por padrão
+      filtro.value.dataInicio = hoje.toISOString().split('T')[0];
     };
 
     const formatarData = (data) => {
@@ -290,7 +308,8 @@ export default {
     };
 
     onMounted(() => {
-      buscarFrequencia();
+      inicializarDatas();
+      buscarFrequencia(1);
     });
 
     return {
