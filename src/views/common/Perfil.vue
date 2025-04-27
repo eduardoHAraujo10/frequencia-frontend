@@ -910,21 +910,13 @@ input:focus {
 }
 
 .modal-button.cancel-button {
-  color: #6b7280 !important;
-}
-
-.modal-button.cancel-button:hover {
-  background-color: #f3f4f6 !important;
+  background: #ff6b0080 !important;
+  color: white !important;
 }
 
 .modal-button.confirm-button {
   background: linear-gradient(135deg, #FF6B00 0%, #FF9E4F 100%) !important;
   color: white !important;
-}
-
-.modal-button.confirm-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 107, 0, 0.2) !important;
 }
 
 .message {
