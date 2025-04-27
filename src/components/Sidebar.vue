@@ -200,7 +200,7 @@ onUnmounted(() => {
 .sidebar {
   width: 280px;
   height: 100vh;
-  background: linear-gradient(180deg, #FF6B00 0%, #FF8C00 100%);
+  background: rgba(255, 107, 0, 0.6);
   color: white;
   position: fixed;
   left: 0;

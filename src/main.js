@@ -24,7 +24,7 @@ app.use(createVuestic({
     icons: createIconsConfig({ fonts }),
     colors: {
       variables: {
-        primary: '#FF6B00',
+        primary: '#ff6b0080',
         secondary: '#FF9E4F',
         background: '#f5f6fa',
         content: '#ffffff',
