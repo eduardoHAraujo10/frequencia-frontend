@@ -671,13 +671,13 @@ input:focus {
 }
 
 .edit-button {
-  background: linear-gradient(135deg, #718096 0%, #4a5568 100%);
-  color: white;
+  background: #ff6b0080 !important;
+  color: white !important;
 }
 
 .edit-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(74, 85, 104, 0.2);
+  box-shadow: 0 4px 12px rgba(255, 107, 0, 0.2);
 }
 
 .save-button {
@@ -814,24 +814,14 @@ input:focus {
   font-size: 1rem;
 }
 
-.edit-button {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
-  color: white !important;
-}
-
-.edit-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(37, 99, 235, 0.2) !important;
-}
-
 .change-password-button {
-  background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%) !important;
+  background: #ff6b0080 !important;
   color: white !important;
 }
 
 .change-password-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(109, 40, 217, 0.2) !important;
+  box-shadow: 0 6px 12px rgba(255, 107, 0, 0.2) !important;
 }
 
 /* Estilos do Modal */

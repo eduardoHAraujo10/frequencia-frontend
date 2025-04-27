@@ -214,7 +214,7 @@ const handleSubmit = async () => {
 }
 
 h2 {
-  color: #1a237e;
+  color: #FF6B00;
   margin-bottom: 2rem;
   text-align: center;
   font-size: 2rem;
