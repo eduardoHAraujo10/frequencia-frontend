@@ -111,15 +111,25 @@
                 </span>
               </td>
               <td class="actions">
-                <button class="action-button view" @click="verRegistros(aluno)">
-                  <i class="fas fa-list"></i>
-                </button>
-                <button class="action-button edit" @click="abrirModalEdicao(aluno)">
-                  <i class="fas fa-edit"></i>
-                </button>
-                <button class="action-button status" @click="alterarStatus(aluno)">
-                  <i :class="['fas', aluno.ativo ? 'fa-ban' : 'fa-check']"></i>
-                </button>
+                <va-popover message="Ver Registros" placement="top">
+                  <button class="action-button view" @click="verRegistros(aluno)">
+                    <i class="fas fa-list"></i>
+                  </button>
+                </va-popover>
+                <va-popover message="Editar Matrícula" placement="top">
+                  <button class="action-button edit" @click="abrirModalEdicao(aluno)">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                </va-popover>
+                <va-popover :message="aluno.ativo ? 'Desativar Aluno' : 'Ativar Aluno'" placement="top">
+                  <button
+                    class="action-button status"
+                    :class="aluno.ativo ? 'block' : 'activate'"
+                    @click="alterarStatus(aluno)"
+                  >
+                    <i :class="['fas', aluno.ativo ? 'fa-ban' : 'fa-check']"></i>
+                  </button>
+                </va-popover>
               </td>
             </tr>
           </tbody>
@@ -481,6 +491,10 @@ export default {
   cursor: pointer;
 }
 
+.header-actions button i {
+  margin-right: 0.75rem;
+}
+
 .header-actions button:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
@@ -593,8 +607,11 @@ tr:hover {
   background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
 }
 
-.action-button.status {
-  background: linear-gradient(135deg, #667eea 0%, #5a67d8 100%);
+.action-button.status.block {
+  background: linear-gradient(135deg, #f56565 0%, #c53030 100%);
+}
+.action-button.status.activate {
+  background: linear-gradient(135deg, #68d391 0%, #38a169 100%);
 }
 
 .action-button:hover {
